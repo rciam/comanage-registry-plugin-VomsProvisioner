@@ -42,6 +42,21 @@ class CoVomsProvisionerTargetsController extends SPTController {
     return true;
   }
 
+  public function beforeFilter(){
+    parent::beforeFilter();
+    $this->Security->unlockedFields = array(
+      'CoVomsProvisionerTarget.robot_key',
+      'CoVomsProvisionerTarget.robot_cert',
+    );
+    $this->Security->blackHoleCallback = 'blackhole';
+  }
+
+  public function blackhole($type) {
+    // handle errors.
+    $this->log(__METHOD__ . "::Blackhauled with type: " . $type, LOG_DEBUG);
+    $this->Flash->set(_txt('op.voms_provisioner.blackhauled',  array(_txt('ct.co_voms_provisioner_targets.1'), $type)), array('key' => 'error'));
+  }
+
   /**
    * @param null $data
    * @return int|mixed|null
@@ -53,9 +68,18 @@ class CoVomsProvisionerTargetsController extends SPTController {
     }
     $coid = null;
     if(!empty($this->request->params["named"]["co"])) {
-      $coid = $this->request->params["named"]["co"];
+      return $this->request->params["named"]["co"];
     }
-    return $coid;
+    // Get the co_id form the parent table(co_provisioning_targets
+    $args = array();
+    $args['conditions']['CoVomsProvisionerTarget.id'] = $this->request->params["pass"][0];
+    $args['contain'] = array('CoProvisioningTarget');
+    $voms_provisioner_target = $this->CoVomsProvisionerTarget->find('first', $args);
+    if(!empty($voms_provisioner_target["CoProvisioningTarget"]["co_id"])) {
+      return $voms_provisioner_target["CoProvisioningTarget"]["co_id"];
+    }
+
+    return null;
   }
 
   /**

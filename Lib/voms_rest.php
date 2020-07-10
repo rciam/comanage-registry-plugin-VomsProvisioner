@@ -1,5 +1,5 @@
 <?php
-
+require_once "./Lib/RestClient.php";
 /*
  * List of SIMPLE HTTP calls: https://github.com/italiangrid/voms-admin-client/blob/037b8fb3bf9e89c5bc14bb017b9c4d84f4044175/src/VOMSAdmin/VOMSCommands.py
  * - create User
@@ -115,9 +115,11 @@ $delete_user = array(
   'certificateSubject' => $dn,
   'caSubject' => $ca,
 );
+do_curl_from_class($rest_base_url, $create_user_data, $user_cert, $user_key);
+
 
 // Create user test
-do_curl($rest_base_url, 'create-user.action', $create_user_data, $user_cert, $user_key);
+//do_curl($rest_base_url, 'create-user.action', $create_user_data, $user_cert, $user_key);
 
 //// Delete user test
 //do_curl($rest_base_url, 'delete.action', $create_user_data, $user_cert, $user_key);
@@ -130,8 +132,7 @@ do_curl($rest_base_url, 'create-user.action', $create_user_data, $user_cert, $us
 
 //// Get user stats: works
 //do_curl($rest_base_url, 'user-stats.action', array(), $user_cert, $user_key);
-
-function do_curl($rest_base_url, $action, $post_fields, $user_cert, $user_key)
+function do_curl_from_class($rest_base_url, $post_fields, $user_cert, $user_key)
 {
   $user_fcert = tempnam("/tmp", "user_cert_tmpfile");
   $handle_fcert = fopen($user_fcert, "w");
@@ -145,69 +146,8 @@ function do_curl($rest_base_url, $action, $post_fields, $user_cert, $user_key)
   fclose($handle_fkey);
   chmod($user_fkey, 0644);
 
-  //  I realized the header was not sent when it was empty. If you want to set an empty header, try to use \"\"
-  $http_headers = array(
-    'X-VOMS-CSRF-GUARD: ""',
-  );
-
-  if(!empty($post_fields)) {
-    $http_headers[] = 'Content-Type: application/json';
-  }
-
-  $response_headers = [];
-
-  $ch = curl_init();
-// Construct the action url
-  $url = $rest_base_url . '/' . $action;
-// set the url, number of POST vars, POST data
-  curl_setopt($ch, CURLOPT_URL, $url);
-  curl_setopt($ch, CURLOPT_POST, count($post_fields));
-  curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($post_fields));
-  curl_setopt($ch, CURLOPT_HTTPHEADER, $http_headers);
-  curl_setopt($ch, CURLOPT_SSLCERT, $user_fcert);
-  curl_setopt($ch, CURLOPT_SSLKEY, $user_fkey);
-  curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-  curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
-  curl_setopt($ch, CURLOPT_VERBOSE, true);
-  curl_setopt($ch, CURLOPT_TIMEOUT, 5000);
-  // this function is called by curl for each header received
-  curl_setopt($ch, CURLOPT_HEADERFUNCTION,
-    function($curl, $header) use (&$response_headers)
-    {
-      $len = strlen($header);
-      $header = trim($header);
-      if(!empty($header)) {
-        $header = explode(':', $header, 2);
-        if (count($header) < 2) {
-          // This is the summary
-          $header = implode('', $header);
-          $header = explode(' ', $header, 3);
-          $response_headers['server_msg'] = $header[2];
-        } else {
-          $response_headers[strtolower(trim($header[0]))][] = trim($header[1]);
-        }
-      }
-
-      return $len;
-    }
-  );
-
-  // execute post
-  $response = curl_exec($ch);
-  $status_code = "";
-  $error = "";
-  if (empty($response)) {
-    // probably connection error
-    $error = curl_error($ch);
-  }
-
-  $info = curl_getinfo($ch);
-  if($info["http_code"] !== 200) {
-    echo $response_headers["server_msg"];
-  }
-
-// close connection
-  curl_close($ch);
-
+  //Create a restClient
+  $restClient = new RestClient($rest_base_url, $user_fcert, $user_fkey);
+  $parameters['post_fields'] = $post_fields;
+  $restClient->createUser($parameters);
 }

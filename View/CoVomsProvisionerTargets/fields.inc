@@ -40,57 +40,100 @@ if(!$e && !$permissions['view'])
 print $this->Form->hidden('co_id', array('default' => $cur_co['Co']['id'])) . "\n";
 print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_ptid)) . "\n";
 ?>
+<style>
+  .progress {
+    background-color: rgba(0, 0, 0, 0.15) !important;
+    vertical-align: bottom;
+    display: none;
+  }
+  .progress-bar {
+    width: 100%;
+    height: 100%;
+  }
+  .volume-slider {
+    bottom: 0px;
+    height: 0.25em !important;
+    position: absolute;
+    width: 6.65em;
+  }
+  .upload-done {
+    background: green;
+    border-radius: 50%;
+    color: white;
+    vertical-align: middle !important;
+    display: none;
+  }
+</style>
 
 <script src="<?= $this->request->webroot . 'voms_provisioner' ?>/jquery/jquery.base64.js"></script>
 <script type="text/javascript">
-    $(document).ready(function () {
-        $('[type=file]').change(function() {
-            // Get the id of the input and retrieve the corresponding input textbox
-            id = $(this).attr('id').toString().toLowerCase();
-            let textbox = id.indexOf("key")>=0 ? $('CoVomsProvisionerTargetRobotKey') : $('CoVomsProvisionerTargetRobotCert');
-            //console.log(textbox);
 
-            if (!("files" in this)) {
-                alert("File reading not supported in this browser");
-            }
-            let file = this.files && this.files[0];
-            if (!file) {
+    // todo: Investigate more on filereader. It would be better if we made this a promise
+    function read_file(event, validation_string, input_textbox, file_type) {
+        const fileList = event.target.files;
+        if (!fileList || fileList.length < 1) {
+            alert("File reading not supported in this browser");
+            return;
+        }
+        const file = fileList[0];
+
+        let fileReader = new FileReader();
+        fileReader.onload = (event) => {
+            let payload = event.target.result;
+            if(payload.includes(validation_string)) {
+                let li = input_textbox.closest('li');
+                let description = li.find('.field-desc');
+                let description_text = description.html().split('-')[0].trim();
+                description.html(description_text);
+            }else{
+                let li = input_textbox.closest('li');
+                let description = li.find('.field-desc');
+                let description_text = description.html().split('-')[0].trim();
+                description_text = description_text + "<span style='color:red'>  - Wrong File Input</span>";
+                description.html(description_text);
                 return;
             }
-            let fileReader = new FileReader();
-            fileReader.onload = function(e) {
-                let text = e.target.result;
-                // console.log(id.indexOf("private"));
-                // console.log(text.indexOf("BEGIN RSA PRIVATE KEY"));
-                // console.log(text.indexOf("ssh-rsa"));
-                if(text.indexOf("BEGIN PRIVATE KEY") >= 0 && id.indexOf("key") >= 0) {
-                    let li = textbox.closest('li');
-                    //console.log(li);
-                    let description = li.find('.field-desc');
-                    //console.log(description);
-                    let description_text = description.html().split('-')[0].trim();
-                    description.html(description_text);
-                }else{
-                    //console.log('Wrong type of file');
-                    let li = textbox.closest('li');
-                    //console.log(li);
-                    let description = li.find('.field-desc');
-                    //console.log(description);
-                    let description_text = description.html().split('-')[0].trim();
-                    description_text = description_text + "<span style='color:red'>  - Wrong File Input</span>";
-                    description.html(description_text);
-                    return;
+            //Encode to base64
+            let result = $.base64.encode(payload);
+            // Add base64 encoded value in the textbox
+            input_textbox.val(result);
+            $('#' + file_type + '-done').show();
+        }
+        fileReader.onprogress = (event) => {
+            progress_element = $('#'+file_type + '-progress');
+            let progress_bar = progress_element.find('.progress-bar');
+            progress_element.show();
+            if (event.loaded && event.total) {
+                // Add a progressbar
+                const percent = Math.round((event.loaded / event.total) * 100);
+                progress_bar.width(percent+'%');
+                console.log('Progress: ' + percent);
+                if( percent === 100) {
+                    progress_element.hide();
                 }
-                //Encode to base64
-                //console.log(text);
-                let result = $.base64.encode(text);
-                //console.log(result);
-                // Add base64 encoded value in the textbox
-                textbox.val(result);
-            };
-            fileReader.readAsText(this.files[0]);
+            }
+        }
+        fileReader.onerror = (event) => {
+            let li = input_textbox.closest('li');
+            let description = li.find('.field-desc');
+            let description_text = description.html().split('-')[0].trim();
+            description_text = description_text + "<span style='color:red'>  - Load File failed</span>";
+            description.html(description_text);
+        }
+        fileReader.readAsText(file);
+    }
+    $(document).ready(function () {
+        // Read the Robot Cert
+        $('#robot_cert[type=file]').change((event) => {
+            $('#cert-done').hide();
+            read_file(event, 'BEGIN CERTIFICATE', $('#CoVomsProvisionerTargetRobotCert'), 'cert');
         });
 
+        // Read the Robot Key
+        $('#robot_key[type=file]').change((event) => {
+            $('#key-done').hide();
+            read_file(event, 'BEGIN PRIVATE KEY', $('#CoVomsProvisionerTargetRobotKey'), 'key');
+        });
     });
 </script>
 
@@ -142,12 +185,16 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
       <div class="field-desc"><?php print _txt('pl.voms_provisioner.robot_cert.desc'); ?></div>
     </div>
     <div class="field-info">
-      <label for="robot_cert" class="loadbutton ui-button ui-corner-all ui-widget">
+      <label for="robot_cert" class="loadbutton ui-button ui-corner-all ui-widget" style="width:6em;">
         <span class="ui-button-icon ui-icon ui-icon-transferthick-e-w"></span>
-        <input type="file" id="robot_cert" style="display: none"/>
+        <input type="file" id="robot_cert" accept="application/x-x509-ca-cert, .pem" style="display: none"/>
         Load
       </label>
+      <div id="cert-progress" class="progress volume-slider">
+        <div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
       <?php print $this->Form->hidden('robot_cert', array('default' => $co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_cert'])) . "\n";?>
+      <em id="cert-done" class="material-icons upload-done">done</em>
     </div>
   </li>
   <li>
@@ -159,12 +206,16 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
       <div class="field-desc"><?php print _txt('pl.voms_provisioner.robot_key.desc'); ?></div>
     </div>
     <div class="field-info">
-      <label for="robot_key"  class="loadbutton ui-button ui-corner-all ui-widget">
+      <label for="robot_key"  class="loadbutton ui-button ui-corner-all ui-widget" style="width:6em;">
         <span class="ui-button-icon ui-icon ui-icon-transferthick-e-w"></span>
-        <input type="file" id="robot_key" style="display: none"/>
+        <input type="file" id="robot_key" accept="application/x-x509-ca-cert, .pem" style="display: none"/>
         Load
       </label>
+      <div id="key-progress" class="progress volume-slider">
+        <div class="progress-bar" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
       <?php print $this->Form->hidden('robot_key', array('default' => $co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_key'])) . "\n";?>
+      <em id="key-done" class="material-icons upload-done">done</em>
     </div>
   </li>
   <?php if($e): ?>

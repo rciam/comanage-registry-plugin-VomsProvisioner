@@ -24,12 +24,13 @@ $cm_voms_provisioner_texts['en_US'] = array(
   'pl.voms_provisioner.port'               => 'Port',
   'pl.voms_provisioner.port.desc'          => 'VOMs HTTP port we will use to connect',
   'pl.voms_provisioner.robot_cert'         => 'Robot Certificate',
-  'pl.voms_provisioner.robot_cert.desc'    => 'Certificate of VOs robot user with administrator priviledges',
+  'pl.voms_provisioner.robot_cert.desc'    => 'Certificate of VOs robot user with administrator priviledges.',
   'pl.voms_provisioner.robot_key'          => 'Robot Key',
   'pl.voms_provisioner.robot_key.desc'     => 'Key of VOs robot user with administrator priviledges',
   // Plugin texts
-  'pl.voms_provisioner.info'               => 'Define the VOMs where you will push/sync the status of the associated Group/COU'
+  'pl.voms_provisioner.info'               => 'Define the VOMs where you will push/sync the status of the associated Group/COU',
 
   // Success messages
+  'op.voms_provisioner.blackhauled'        => '%1$s Request Blackhauled(t:"%2$s")',
 
 );
