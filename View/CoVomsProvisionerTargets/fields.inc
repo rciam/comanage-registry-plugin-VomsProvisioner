@@ -37,6 +37,20 @@ if(($this->action == "add" && $permissions['add']) || ($this->action == "edit" &
 if(!$e && !$permissions['view'])
   return false;
 
+// Add breadcrumbs
+print $this->element("coCrumb");
+// Provisioning Targes Crumb
+$args = array();
+$args['plugin'] = null;
+$args['controller'] = 'co_provisioning_targets';
+$args['action'] = 'index';
+$args['co'] = $cur_co['Co']['id'];
+$this->Html->addCrumb(_txt('ct.co_provisioning_targets.pl'), $args);
+
+// Current Crumb
+$crumbTxt = _txt('op.' . $this->action . '-a', array(_txt('ct.co_voms_provisioner_targets.1')));
+$this->Html->addCrumb($crumbTxt);
+
 print $this->Form->hidden('co_id', array('default' => $cur_co['Co']['id'])) . "\n";
 print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_ptid)) . "\n";
 ?>
