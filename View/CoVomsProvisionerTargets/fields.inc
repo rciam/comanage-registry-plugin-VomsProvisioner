@@ -162,6 +162,29 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
 <ul id="<?php print $this->action; ?>_co_voms_provisioner_target" class="fields form-list form-list-admin">
   <li>
     <div class="field-name">
+      <div class="field-title">
+        <?php print _txt('pl.voms_provisioner.vo'); ?>
+        <span class="required">*</span>
+      </div>
+      <div class="field-desc"><?php print _txt('pl.voms_provisioner.vo.desc'); ?></div>
+    </div>
+    <div class="field-info">
+      <?php
+        $options = array(
+          'size'      => 50,
+          'maxlength' => 96,
+          'type'      => 'text',
+        );
+        if(isset($vv_cou_name)) {
+          $options['readonly'] = true;
+          $options['value'] = $vv_cou_name;
+        }
+        print $this->Form->input('vo', $options);
+      ?>
+    </div>
+  </li>
+  <li>
+    <div class="field-name">
       <div class="field-title"><?php print _txt('pl.voms_provisioner.host'); ?>
         <span class="required">*</span>
       </div>
@@ -180,18 +203,6 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
     </div>
     <div class="field-info">
       <?php print ($e ? $this->Form->input('port', array('type' => 'number')) : filter_var($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['port'],FILTER_SANITIZE_SPECIAL_CHARS)); ?>
-    </div>
-  </li>
-  <li>
-    <div class="field-name">
-      <div class="field-title">
-        <?php print _txt('pl.voms_provisioner.vo'); ?>
-        <span class="required">*</span>
-      </div>
-      <div class="field-desc"><?php print _txt('pl.voms_provisioner.vo.desc'); ?></div>
-    </div>
-    <div class="field-info">
-      <?php print ($e ? $this->Form->input('vo', array('size' => 50, 'maxlength'=>'96')) : filter_var($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['vo'],FILTER_SANITIZE_SPECIAL_CHARS)); ?>
     </div>
   </li>
   <li>

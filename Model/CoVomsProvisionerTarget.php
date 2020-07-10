@@ -96,10 +96,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
   public function provision($coProvisioningTargetData, $op, $provisioningData)
   {
     $this->log(__METHOD__ . "::@", LOG_DEBUG);
-
     $this->log(__METHOD__ . "::action => ".$op, LOG_DEBUG);
-    $this->log(__METHOD__ . "::target data => ".print_r($coProvisioningTargetData,true),LOG_DEBUG);
-    $this->log(__METHOD__ . "::provision data => ".print_r($provisioningData,true),LOG_DEBUG);
 
     $robot_cert = $this->getRobotCert($coProvisioningTargetData);
     $robot_key = $this->getRobotKey($coProvisioningTargetData);
@@ -129,6 +126,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
    * @throws InvalidArgumentException
    */
   protected function retrieveUserVoStatus($provisioningData, $coProvisioningTargetData) {
+    $this->log(__METHOD__ . "::@", LOG_DEBUG);
     if(empty($coProvisioningTargetData["CoVomsProvisionerTarget"]['host'])
        || empty($coProvisioningTargetData["CoVomsProvisionerTarget"]['port'])){
       throw new InvalidArgumentException(_txt('er.notfound',
@@ -141,7 +139,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     $provision_group_ret = $this->CoProvisioningTarget->find('first', $args);
     $co_group_id = $provision_group_ret["CoProvisioningTarget"]["provision_co_group_id"];
     $user_memberships_profile = Hash::flatten($provisioningData['CoGroupMember']);
-    $this->log(__METHOD__ . "::@", LOG_DEBUG);
+
     $in_group = array_search($co_group_id, $user_memberships_profile);
     if(!empty($in_group)){
       $index = explode('.', $in_group, 2)[0];
@@ -149,21 +147,27 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       $cou_id = $user_membership_status["CoGroup"]["cou_id"];
     }
 
-    $user_roles_profile = Hash::flatten($provisioningData['CoPersonRole']);
+    $args = array();
+    $args['conditions']['CoPerson.id'] = $provisioningData["CoPerson"]["id"];
+    $args['contain']['CoPersonRole'] = array(
+      'conditions' => ['CoPersonRole.cou_id' => $cou_id],
+    );
+    $args['contain']['CoGroupMember']= array(
+      'conditions' => ['CoGroupMember.co_group_id' => $co_group_id],
+    );
+    $args['contain']['CoGroupMember']['CoGroup'] = array(
+      'conditions' => ['CoGroup.id' => $co_group_id],
+    );
+    // todo: Test if it fetches the org identities Certs
+    $args['contain']['CoOrgIdentityLink']['OrgIdentity'] = 'Cert';
 
-    if(!empty($cou_id)) {
-      $in_roles = array_search((int)$cou_id, $user_roles_profile, true);
-      if (!empty($in_roles)) {
-        $index = explode('.', $in_roles, 2)[0];
-        $user_roles_status = $provisioningData['CoPersonRole'][$index];
-      }
-    }
+    $user_profile = $this->CoProvisioningTarget->Co->CoPerson->find('first', $args);
 
     // XXX In $provisioningData
     // XXX The user is a member even if suspended.
     // XXX The user's role is not fetched if SUSPENDED
     $this->log(__METHOD__ . "::user membership status". print_r($user_membership_status),LOG_DEBUG);
-    $this->log(__METHOD__ . "::user roles status". print_r($user_roles_status),LOG_DEBUG);
+    $this->log(__METHOD__ . "::user roles status". print_r($user_profile),LOG_DEBUG);
   }
 
   /**

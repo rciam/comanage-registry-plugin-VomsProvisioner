@@ -31,7 +31,8 @@ $cm_voms_provisioner_texts['en_US'] = array(
   // Plugin texts
   'pl.voms_provisioner.info'               => 'Define the VOMs where you will push/sync the status of the associated Group/COU',
 
-  // Success messages
+  // Operation messages
   'op.voms_provisioner.blackhauled'        => '%1$s Request Blackhauled(t:"%2$s")',
+  'op.voms_provisioner.nogroup'            => 'No Group/VO configured.',
 
 );
