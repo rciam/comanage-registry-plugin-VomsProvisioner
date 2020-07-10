@@ -16,6 +16,7 @@ $cm_voms_provisioner_texts['en_US'] = array(
   'er.voms_provisioner.subject'            => 'Could not determine co person subject dn',
   'er.voms_provisioner.issuer'             => 'Could not determine certificate issuer',
   'er.voms_provisioner.canonical'          => 'Could not determine co person canonical name',
+  'er.voms_provisioner.nohst_prt'          => 'Host/Port missing',
 
   'pl.voms_provisioner.host'               => 'Base server URL',
   'pl.voms_provisioner.host.desc'          => 'VOMS hostname',

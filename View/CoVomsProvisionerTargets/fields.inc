@@ -53,6 +53,10 @@ $this->Html->addCrumb($crumbTxt);
 
 print $this->Form->hidden('co_id', array('default' => $cur_co['Co']['id'])) . "\n";
 print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_ptid)) . "\n";
+
+// https://dirac.egi.eu/files/diracVOs.json
+// todo: Perhaps i could use this to configure the provisioner automagically
+
 ?>
 <style>
   .progress {
