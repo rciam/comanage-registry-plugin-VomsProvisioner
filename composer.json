@@ -1,0 +1,21 @@
+{
+  "name": "/VomsProvisioner",
+  "description": "COmanage provisioner for VOM servers",
+  "minimum-stability": "",
+  "license": "Apache-2.0",
+  "authors": [
+    {
+      "name": "Ioannis Igoumenos",
+      "email": "ioigoume@admin.grnet.gr"
+    },
+    {
+      "name": "Nicolas Mastoris",
+      "email": "nmastoris@admin.grnet.gr"
+    }
+  ],
+{
+  "require": {
+    "guzzlehttp/guzzle": "~6.0",
+  }
+}
+}
