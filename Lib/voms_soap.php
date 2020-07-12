@@ -1,5 +1,5 @@
 <?php
-require_once "./Lib/SoapClient.php";
+require_once "VomsSoapClient.php";
 /*
  * List of SIMPLE HTTP calls: https://github.com/italiangrid/voms-admin-client/blob/037b8fb3bf9e89c5bc14bb017b9c4d84f4044175/src/VOMSAdmin/VOMSCommands.py
  * - create User
@@ -125,7 +125,7 @@ function do_curl_from_class($base_url, $action, $post_fields, $user_cert, $user_
   echo 'BASEURL: '.$base_url;
 
   //Create a soapVoms
-  $soapVoms = new SoapClient($base_url,$user_fcert,$user_fkey);
+  $soapVoms = new VomsSoapClient($base_url,$user_fcert,$user_fkey);
   $parameters['certificateSubject'] = $post_fields['certificateSubject'];
   $parameters['caSubject'] = $post_fields['caSubject'];
   //$soapVoms->getUser($parameters);

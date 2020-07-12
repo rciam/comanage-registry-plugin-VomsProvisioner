@@ -1,5 +1,5 @@
 <?php
-require_once "./Lib/RestClient.php";
+require_once "VomsRestClient.php";
 /*
  * List of SIMPLE HTTP calls: https://github.com/italiangrid/voms-admin-client/blob/037b8fb3bf9e89c5bc14bb017b9c4d84f4044175/src/VOMSAdmin/VOMSCommands.py
  * - create User
@@ -115,7 +115,7 @@ $delete_user = array(
   'certificateSubject' => $dn,
   'caSubject' => $ca,
 );
-do_curl_from_class($rest_base_url, $create_user_data, $user_cert, $user_key);
+do_curl_from_class($host, $port, $vo, $create_user_data, $user_cert, $user_key);
 
 
 // Create user test
@@ -132,22 +132,22 @@ do_curl_from_class($rest_base_url, $create_user_data, $user_cert, $user_key);
 
 //// Get user stats: works
 //do_curl($rest_base_url, 'user-stats.action', array(), $user_cert, $user_key);
-function do_curl_from_class($rest_base_url, $post_fields, $user_cert, $user_key)
+function do_curl_from_class($host, $port, $vo, $post_fields, $user_cert, $user_key)
 {
-  $user_fcert = tempnam("/tmp", "user_cert_tmpfile");
-  $handle_fcert = fopen($user_fcert, "w");
-  fwrite($handle_fcert, $user_cert);
-  fclose($handle_fcert);
-
-
-  $user_fkey = tempnam("/tmp", "user_key_tmpfile");
-  $handle_fkey = fopen($user_fkey, "w");
-  fwrite($handle_fkey, $user_key);
-  fclose($handle_fkey);
-  chmod($user_fkey, 0644);
+//  $user_fcert = tempnam("/tmp", "user_cert_tmpfile");
+//  $handle_fcert = fopen($user_fcert, "w");
+//  fwrite($handle_fcert, $user_cert);
+//  fclose($handle_fcert);
+//
+//
+//  $user_fkey = tempnam("/tmp", "user_key_tmpfile");
+//  $handle_fkey = fopen($user_fkey, "w");
+//  fwrite($handle_fkey, $user_key);
+//  fclose($handle_fkey);
+//  chmod($user_fkey, 0644);
+  $params = array($host, $port, $vo, $user_cert, $user_key);
 
   //Create a restClient
-  $restClient = new RestClient($rest_base_url, $user_fcert, $user_fkey);
-  $parameters['post_fields'] = $post_fields;
-  $restClient->createUser($parameters);
+  $restClient = new VomsRestClient(...$params);
+  $restClient->createUser($post_fields);
 }

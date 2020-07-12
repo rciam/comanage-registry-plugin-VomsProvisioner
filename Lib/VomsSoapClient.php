@@ -1,6 +1,6 @@
 <?php
 require_once "./Lib/HttpCurlClient.php";
-class SoapClient
+class VomsSoapClient
 {
   private $user_cert;
   private $key_cert;

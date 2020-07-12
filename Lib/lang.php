@@ -17,6 +17,7 @@ $cm_voms_provisioner_texts['en_US'] = array(
   'er.voms_provisioner.issuer'             => 'Could not determine certificate issuer',
   'er.voms_provisioner.canonical'          => 'Could not determine co person canonical name',
   'er.voms_provisioner.nohst_prt'          => 'Host/Port missing',
+  'er.voms_provisioner.ntfnd_api'          => 'Rest API URL could not be constructed.',
 
   'pl.voms_provisioner.host'               => 'Base server URL',
   'pl.voms_provisioner.host.desc'          => 'VOMS hostname',
