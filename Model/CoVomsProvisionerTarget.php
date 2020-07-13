@@ -29,6 +29,8 @@
 App::uses("CoProvisionerPluginTarget", "Model");
 App::uses('HttpSocket', 'Network/Http');
 
+require_once(LOCAL . DS . 'Plugin' . DS . 'VomsProvisioner' . DS . 'Lib' . DS . 'VomsClient.php');
+
 /**
  * Class VomsProvisionerTarget
  */
@@ -100,7 +102,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
 
     $robot_cert = $this->getRobotCert($coProvisioningTargetData);
     $robot_key = $this->getRobotKey($coProvisioningTargetData);
-    $info_vo = $this->retrieveUserVoStatus($provisioningData, $coProvisioningTargetData);
+    $user_cou_related_profile = $this->retrieveUserVoStatus($provisioningData, $coProvisioningTargetData);
     switch ($op) {
       case ProvisioningActionEnum::CoPersonUpdated:
         $this->log(__METHOD__ . "::Person Updated", LOG_DEBUG);
@@ -125,7 +127,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
    * @param $coProvisioningTargetData
    * @throws InvalidArgumentException
    */
-  protected function retrieveUserVoStatus($provisioningData, $coProvisioningTargetData) {
+  protected function retrieveUserCouRelatedStatus($provisioningData, $coProvisioningTargetData) {
     $this->log(__METHOD__ . "::@", LOG_DEBUG);
     if(empty($coProvisioningTargetData["CoVomsProvisionerTarget"]['host'])
        || empty($coProvisioningTargetData["CoVomsProvisionerTarget"]['port'])){
@@ -147,6 +149,8 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       $cou_id = $user_membership_status["CoGroup"]["cou_id"];
     }
 
+    // Create the profile of the user according to the group_id and cou_id of the provisioned
+    // resources that we configured
     $args = array();
     $args['conditions']['CoPerson.id'] = $provisioningData["CoPerson"]["id"];
     $args['contain']['CoPersonRole'] = array(
@@ -159,15 +163,29 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       'conditions' => ['CoGroup.id' => $co_group_id],
     );
     // todo: Test if it fetches the org identities Certs
-    $args['contain']['CoOrgIdentityLink']['OrgIdentity'] = 'Cert';
+    $args['contain']['CoOrgIdentityLink']['OrgIdentity']['Cert'] = array(
+      'conditions' => ['Cert.issuer is not null'],
+    );
 
+    // XXX Filter with this $user_profile["CoOrgIdentityLink"][2]["OrgIdentity"]["Cert"]
+    // We can not perform any action with VOMS without a Certificate having both a subjectDN and an Issuer
+    // Keep in depth level 1 only the non empty Certificates
     $user_profile = $this->CoProvisioningTarget->Co->CoPerson->find('first', $args);
+    foreach($user_profile["CoOrgIdentityLink"] as $link) {
+      if(!empty($link["OrgIdentity"]["Cert"])) {
+        foreach ($link["OrgIdentity"]["Cert"] as $cert) {
+          $user_profile['Cert'][] = $cert;
+        }
+      }
+    }
+
 
     // XXX In $provisioningData
     // XXX The user is a member even if suspended.
     // XXX The user's role is not fetched if SUSPENDED
     $this->log(__METHOD__ . "::user membership status". print_r($user_membership_status),LOG_DEBUG);
     $this->log(__METHOD__ . "::user roles status". print_r($user_profile),LOG_DEBUG);
+    return $user_profile;
   }
 
   /**
