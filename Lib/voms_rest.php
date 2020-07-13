@@ -158,7 +158,7 @@ $suspend_payload = array(
   'certificateSubject' => $dn,
   'caSubject' => $ca,
 );
-$restClient->vomsRestRequest('suspend-user.action', $suspend_payload);
+//$restClient->vomsRestRequest('suspend-user.action', $suspend_payload);
 
 $new_group = array(
   "groupName"=> "test_group_ioigoume",
@@ -172,7 +172,7 @@ $restore_payload = array(
 );
 
 //$restClient->vomsRestRequest('restore-user.action', $restore_payload);
-//$restClient->vomsRestRequest('user-stats.action'); //  ok
+var_dump($restClient->vomsRestRequest('user-stats.action')); //  ok
 //$restClient->vomsRestRequest('suspended-users.action'); // ok
 //$restClient->vomsRestRequest('expired-users.action'); // ok
 //$restClient->vomsRestRequest('restore-all-suspended-users.action'); // ok
