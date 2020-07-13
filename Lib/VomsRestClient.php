@@ -1,6 +1,4 @@
 <?php
-//use GuzzleHttp\Client;
-// XXX during testing i need to import the Guzzle Vendor library manually
 require_once '../Vendor/autoload.php';
 
 class VomsRestClient
@@ -147,32 +145,30 @@ class VomsRestClient
   /**
    * @param $action
    * @param array $post_fields
+   * @param boolean $debug
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
-  public function vomsRestRequest($action, $post_fields=array()) {
+  public function vomsRestRequest($action, $post_fields=array(), $debug=false) {
     try{
       $client = $this->httpClient();
       $options = [
-        'debug' => true,
+        'debug' => $debug,
         'headers' => $this->constructHeaders(!empty($post_fields)),
       ];
       if(!empty($post_fields)) {
         $options['json'] = $post_fields;
       }
       $response = $client->request('POST', $this->_req_location . '/' . $action, $options);
-      var_export($response);
-      $headers = $response->getHeaders();
-//      var_export($headers);
-
-      $body = $response->getBody()->getContents();
-      $status = $response->getStatusCode();
-      var_export($body);
-      var_export($status);
-
-    } catch (\GuzzleHttp\Exception\RequestException $e) {
-      var_export($e->xdebug_message);
+      return [
+        'status_code' => $response->getStatusCode(),
+        'body' => $response->getBody()->getContents(),
+      ];
     } catch (Exception $e) {
-      var_export($e);
+      $response = $e->getResponse();
+      return [
+        'status_code' => $response->getStatusCode(),
+        'msg' => $response->getReasonPhrase(),
+      ];
     }
   }
 
