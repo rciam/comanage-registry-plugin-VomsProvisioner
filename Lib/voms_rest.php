@@ -27,7 +27,7 @@ $vo = 'checkin-integration';
 $action = 'create-user.action';
 
 //$dn = 'CN=Ioannis Igoumenos 3aRVXSXXqXM1ysaG,O=EGI Foundation,OU=AAI-Pilot,O=EGI'; // GRNET
-$dn = ' CN=IOANNIS IGOUMENOS IPYuCDUQz9Pd0Fzn,O=EGI Foundation,OU=AAI-Pilot,O=EGI '; // LINKEDIN
+$dn = 'CN=IOANNIS IGOUMENOS IPYuCDUQz9Pd0Fzn,O=EGI Foundation,OU=AAI-Pilot,O=EGI'; // LINKEDIN
 $ca = '/O=EGI/OU=AAI-Pilot/CN=EGI Simple Demo CA';
 
 $rest_base_url = 'https://' . $host . ':' . $port . '/voms/' . $vo . '/apiv2';
@@ -98,24 +98,12 @@ Rm95YjoCJJJHzV3Fqt7zXsQ=
 -----END PRIVATE KEY-----";
 
 // XXX what about AUP data?
-$create_user_data = array(
-  'user' => array(
-    'emailAddress' => 'ioigoume@test.com',
-    'institution' => 'Dummy Test',
-    'phoneNumber' => '6936936937',
-    'surname' => 'Igoumenos',
-    'name' => 'Ioannis',
-    'address' => 'No where....',
-  ),
-  'certificateSubject' => $dn,
-  'caSubject' => $ca,
-);
+
 
 $delete_user = array(
   'certificateSubject' => $dn,
   'caSubject' => $ca,
 );
-do_curl_from_class($host, $port, $vo, $create_user_data, $user_cert, $user_key);
 
 
 // Create user test
@@ -132,8 +120,7 @@ do_curl_from_class($host, $port, $vo, $create_user_data, $user_cert, $user_key);
 
 //// Get user stats: works
 //do_curl($rest_base_url, 'user-stats.action', array(), $user_cert, $user_key);
-function do_curl_from_class($host, $port, $vo, $post_fields, $user_cert, $user_key)
-{
+
 //  $user_fcert = tempnam("/tmp", "user_cert_tmpfile");
 //  $handle_fcert = fopen($user_fcert, "w");
 //  fwrite($handle_fcert, $user_cert);
@@ -145,9 +132,47 @@ function do_curl_from_class($host, $port, $vo, $post_fields, $user_cert, $user_k
 //  fwrite($handle_fkey, $user_key);
 //  fclose($handle_fkey);
 //  chmod($user_fkey, 0644);
-  $params = array($host, $port, $vo, $user_cert, $user_key);
+$params = array($host, $port, $vo, $user_cert, $user_key);
 
-  //Create a restClient
-  $restClient = new VomsRestClient(...$params);
-  $restClient->createUser($post_fields);
-}
+//Create a restClient
+$restClient = new VomsRestClient(...$params);
+
+// Create User
+$create_user_data = array(
+  'user' => array(
+    'emailAddress' => 'ioigoume@test.com',
+    'institution' => 'Dummy Test',
+    'phoneNumber' => '6936936937',
+    'surname' => 'Igoumenos',
+    'name' => 'Ioannis',
+    'address' => 'No where....',
+  ),
+  'certificateSubject' => $dn,
+  'caSubject' => $ca,
+);
+//$restClient->createUser($create_user_data); // ok
+
+// Suspend user
+$suspend_payload = array(
+  'suspensionReason' => 'You were bad.',
+  'certificateSubject' => $dn,
+  'caSubject' => $ca,
+);
+$restClient->vomsRestRequest('suspend-user.action', $suspend_payload);
+
+$new_group = array(
+  "groupName"=> "test_group_ioigoume",
+  "groupDescription" => "This is a test group"
+);
+//$restClient->vomsRestRequest('create-group.action', $new_group);
+
+$restore_payload = array(
+  'certificateSubject' => 'CN=IOANNIS IGOUMENOS IPYuCDUQz9Pd0Fzn,O=EGI Foundation,OU=AAI-Pilot,O=EGI',
+  'caSubject' => '/O=EGI/OU=AAI-Pilot/CN=EGI Simple Demo CA',
+);
+
+//$restClient->vomsRestRequest('restore-user.action', $restore_payload);
+//$restClient->vomsRestRequest('user-stats.action'); //  ok
+//$restClient->vomsRestRequest('suspended-users.action'); // ok
+//$restClient->vomsRestRequest('expired-users.action'); // ok
+//$restClient->vomsRestRequest('restore-all-suspended-users.action'); // ok

@@ -63,7 +63,8 @@ class VomsRestClient
       'X-VOMS-CSRF-GUARD' => '',
     ];
     if($json_content){
-      $http_headers['Content-Type'] = 'application/json';
+      $http_headers['Content-Type'] = 'application/json; charset=utf-8';
+      $http_headers['Accept'] = 'application/json';
     }
 
     if(!empty($head_fields)) {
@@ -132,7 +133,6 @@ class VomsRestClient
    */
   public function getDefaults()
   {
-    var_export($this->constructHeaders());
     return array(
       'base_uri' => $this->baseUri(),
       'timeout' => 5,
@@ -143,33 +143,31 @@ class VomsRestClient
     );
   }
 
+
   /**
-   * $post_fields = array(
-      'user' => array(
-        'emailAddress' => 'ioigoume@test.com',
-        'institution' => 'Dummy Test',
-        'phoneNumber' => '6936936937',
-        'surname' => 'Igoumenos',
-        'name' => 'Ioannis',
-        'address' => 'No where....',
-      ),
-      'certificateSubject' => $dn,
-      'caSubject' => $ca,
-     );
+   * @param $action
    * @param array $post_fields
+   * @throws \GuzzleHttp\Exception\GuzzleException
    */
-  public function createUser($post_fields)
-  {
+  public function vomsRestRequest($action, $post_fields=array()) {
     try{
       $client = $this->httpClient();
-      $response = $client->request('POST', $this->_req_location . '/create-user.action', [
+      $options = [
         'debug' => true,
-        'json' => $post_fields,
-        'headers' => $this->constructHeaders(true),
-        ]);
+        'headers' => $this->constructHeaders(!empty($post_fields)),
+      ];
+      if(!empty($post_fields)) {
+        $options['json'] = $post_fields;
+      }
+      $response = $client->request('POST', $this->_req_location . '/' . $action, $options);
       var_export($response);
       $headers = $response->getHeaders();
-      var_export($headers);
+//      var_export($headers);
+
+      $body = $response->getBody()->getContents();
+      $status = $response->getStatusCode();
+      var_export($body);
+      var_export($status);
 
     } catch (\GuzzleHttp\Exception\RequestException $e) {
       var_export($e->xdebug_message);
