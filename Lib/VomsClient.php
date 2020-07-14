@@ -1,5 +1,6 @@
 <?php
 //include_once 'VomsRestClient.php';
+//include_once 'VomsSoapClient.php';
 //include_once 'enum.php';
 
 class VomsClient
@@ -10,6 +11,7 @@ class VomsClient
   private $robot_cert = null;
   private $robot_key = null;
   private $rest_client = null;
+  private $soap_client = null;
   private $_config = array();
 
   public function __construct($host, $port, $vo_name, $robot_cert, $robot_key)
@@ -32,11 +34,22 @@ class VomsClient
    * Get an instance of the HttpClient
    * @return object GuzzleHttp\Client VomsRestClient
    */
-  protected function restClient() {
+  private function restClient() {
     if($this->rest_client === null) {
       $this->rest_client = new VomsRestClient(...$this->_config);
     }
     return $this->rest_client;
+  }
+
+  /**
+   * Get an instance of the HttpClient
+   * @return object GuzzleHttp\Client VomsSoaptClient
+   */
+  private function soapClient() {
+    if($this->soap_client === null) {
+      $this->soap_client = new VomsSoapClient(...$this->_config);
+    }
+    return $this->soap_client;
   }
 
   protected function checkAlive() {
@@ -69,7 +82,21 @@ class VomsClient
     return $this->restClient()->vomsRequest(VomsRestActionsEnum::CREATE_USER, $user_data);
   }
 
-  public function deleteUser() {
+  /**
+   * @param $dn    User's Subject DN from Certificate
+   * @param $ca    User's CA for Certificate
+   * @return array Response
+   * @throws \GuzzleHttp\Exception\GuzzleException
+   */
+  public function deleteUser($dn, $ca) {
+    if(empty($dn) || empty($ca)) {
+      throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
+    }
+    $post_fields = [
+      'certificateSubject' => $dn,
+      'caSubject' => $ca,
+    ];
+    return $this->soapClient()->vomsRequest(VomsRestActionsEnum::DELETE_USER, $post_fields, false);
 
   }
 

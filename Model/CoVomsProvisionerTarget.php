@@ -47,8 +47,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
   // Default display field for cake generated views
   public $displayField = "vo";
 
-  private $_voms_rest_client = null;
-  private $_voms_soap_client = null;
+  private $_voms_client = null;
 
   // Validation rules for table elements
   public $validate = array(
@@ -93,6 +92,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
    * @param Array Provisioning data, populated with ['CoPerson'] or ['CoGroup']
    * @return Boolean True on success
    * @throws RuntimeException
+   * @throws \GuzzleHttp\Exception\GuzzleException
    * @since  COmanage Registry v0.8
    */
 
@@ -139,13 +139,12 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       // Get my certificates
       $robot_cert = $this->getRobotCert($coProvisioningTargetData);
       $robot_key = $this->getRobotKey($coProvisioningTargetData);
-      // Instantiate Rest Client
-      $this->_voms_rest_client = $this->getVomsClient($coProvisioningTargetData["CoVomsProvisionerTarget"]['host'],
+      // Instantiate VOMS Client
+      $this->_voms_client = $this->getVomsClient($coProvisioningTargetData["CoVomsProvisionerTarget"]['host'],
         $coProvisioningTargetData["CoVomsProvisionerTarget"]['port'],
         $coProvisioningTargetData["CoVomsProvisionerTarget"]['vo'],
         $robot_cert,
         $robot_key);
-      // Instantiate Soap Client
     } else {
       return true;
     }
@@ -154,8 +153,13 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
 
     // The CO Person is not part of the COU
     if(empty($user_cou_related_profile["CoPersonRole"])
-       && $modify) {
-      // todo: Remove COPerson from VOMS
+       && ($modify || $voremove)) {
+      // fixme: How to do i know the $dn and $ca that the user used to register
+      $response = $this->_voms_client->deleteUser($user_cou_related_profile['Cert'][0]['Cert']['subject'],
+                                                  $user_cou_related_profile['Cert'][0]['Cert']['issuer']);
+
+      // todo: handle the response
+      $this->log(__METHOD__ . "::provisioning response: " . print_r($response, true), LOG_DEBUG);
       return true;
     }
 
@@ -163,13 +167,13 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     if(!empty($user_cou_related_profile["CoPersonRole"])) {
       if($modify
          && ($user_cou_related_profile["CoPersonRole"][0]["status"] === StatusEnum::Expired
-             || $user_cou_related_profile["CoPersonRole"][0]["status"] === StatusEnum::Deleted)) {
+             || $user_cou_related_profile["CoPersonRole"][0]["status"] === StatusEnum::Suspended)) {
           // XXX I will translate this as suspended
           return true;
       }
       // XXX add user into VOMS
       $user_payload = $this->getUserData($user_cou_related_profile, $provisioningData);
-      $response = $this->_voms_rest_client->createUser($user_payload);
+      $response = $this->_voms_client->createUser($user_payload);
       // todo: handle the response
       $this->log(__METHOD__ . "::provisioning response: " . print_r($response, true), LOG_DEBUG);
     }
@@ -252,8 +256,8 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       $args=array();
       $args['conditions']['Cert.id'] = $cert_ids;
       $args['contain'] = array('OrgIdentity');
-      $args['contain']['OrgIdentity'][] = 'TelephoneNumber';
-      $args['contain']['OrgIdentity'][] = 'Address';
+      $args['contain']['OrgIdentity'][0] = 'TelephoneNumber';
+      $args['contain']['OrgIdentity'][1] = 'Address';
       $this->Cert = ClassRegistry::init('Cert');
       $user_profile['Cert'] = $this->Cert->find('all', $args);
     }
@@ -298,10 +302,10 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
    * @return Object VomsClient
    */
   protected function getVomsClient($host, $port, $vo_name, $robot_cert, $robot_key) {
-    if(is_null($this->_voms_rest_client)) {
-      $this->_voms_rest_client = new VomsClient($host, $port, $vo_name, $robot_cert, $robot_key);
+    if(is_null($this->_voms_client)) {
+      $this->_voms_client = new VomsClient($host, $port, $vo_name, $robot_cert, $robot_key);
     }
-    return $this->_voms_rest_client;
+    return $this->_voms_client;
   }
 
   /**

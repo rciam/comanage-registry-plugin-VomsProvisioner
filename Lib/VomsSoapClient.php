@@ -13,7 +13,6 @@ class VomsSoapClient extends VomsHttp{
   }
 
   /**
-   * @param bool $json_content
    * @param boolean $content whether you have a content or not
    * @return string[] Array of Http Headers
    */
@@ -32,6 +31,10 @@ class VomsSoapClient extends VomsHttp{
       $http_headers['SOAPAction'] = '\'\'';
     }
     return $http_headers;
+  }
+
+  private function constructEnvelope() {
+
   }
 
   /**
