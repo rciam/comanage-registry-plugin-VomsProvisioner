@@ -17,7 +17,7 @@ $cm_voms_provisioner_texts['en_US'] = array(
   'er.voms_provisioner.issuer'             => 'Could not determine certificate issuer',
   'er.voms_provisioner.canonical'          => 'Could not determine co person canonical name',
   'er.voms_provisioner.nohst_prt'          => 'Host/Port missing',
-  'er.voms_provisioner.ntfnd_api'          => 'Rest API URL could not be constructed.',
+  'er.voms_provisioner.ntfnd_api'          => 'Rest API URL could not be constructed',
 
   'pl.voms_provisioner.host'               => 'Base server URL',
   'pl.voms_provisioner.host.desc'          => 'VOMS hostname',
@@ -26,7 +26,7 @@ $cm_voms_provisioner_texts['en_US'] = array(
   'pl.voms_provisioner.port'               => 'Port',
   'pl.voms_provisioner.port.desc'          => 'VOMs HTTP port we will use to connect',
   'pl.voms_provisioner.robot_cert'         => 'Robot Certificate',
-  'pl.voms_provisioner.robot_cert.desc'    => 'Certificate of VOs robot user with administrator priviledges.',
+  'pl.voms_provisioner.robot_cert.desc'    => 'Certificate of VOs robot user with administrator priviledges',
   'pl.voms_provisioner.robot_key'          => 'Robot Key',
   'pl.voms_provisioner.robot_key.desc'     => 'Key of VOs robot user with administrator priviledges',
   // Plugin texts
@@ -34,6 +34,10 @@ $cm_voms_provisioner_texts['en_US'] = array(
 
   // Operation messages
   'op.voms_provisioner.blackhauled'        => '%1$s Request Blackhauled(t:"%2$s")',
-  'op.voms_provisioner.nogroup'            => 'No Group/VO configured.',
+  'op.voms_provisioner.nogroup'            => 'No Group/VO configured',
+  'op.voms_provisioner.nocert'             => 'No Valid certificate found',
+
+  // Known VOMs error
+  'op.voms_provisioner.vo_existing_person'    => 'A user holding a certificate with the following subject %1$s already exists in this VO.',
 
 );

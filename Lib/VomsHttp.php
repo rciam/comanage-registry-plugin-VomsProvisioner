@@ -1,5 +1,5 @@
 <?php
-require_once '../Vendor/autoload.php';
+//require_once '../Vendor/autoload.php';
 
 abstract class VomsHttp
 {
@@ -47,9 +47,14 @@ abstract class VomsHttp
   }
 
   /**
-   * @return the location of the api, e.g. /voms/vo-name/apiv2
+   * create the location of the api, e.g. /voms/vo-name/apiv2
    */
   abstract protected function getReqLocation();
+
+  /**
+   * create the Request
+   */
+  abstract public function vomsRestRequest($action, $post_fields, $debug);
 
   /**
    * @param bool $json_content

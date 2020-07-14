@@ -1,5 +1,5 @@
 <?php
-require_once "VomsRestClient.php";
+require_once "VomsClient.php";
 /*
  * List of SIMPLE HTTP calls: https://github.com/italiangrid/voms-admin-client/blob/037b8fb3bf9e89c5bc14bb017b9c4d84f4044175/src/VOMSAdmin/VOMSCommands.py
  * - create User
@@ -135,7 +135,7 @@ $delete_user = array(
 $params = array($host, $port, $vo, $user_cert, $user_key);
 
 //Create a restClient
-$restClient = new VomsRestClient(...$params);
+$restClient = new VomsClient(...$params);
 
 // Create User
 $create_user_data = array(
@@ -150,7 +150,14 @@ $create_user_data = array(
   'certificateSubject' => $dn,
   'caSubject' => $ca,
 );
-//$restClient->createUser($create_user_data); // ok
+//$create_user_data = array(
+//  'emailAddress' => 'ioigoume@test.com',
+//  'cn' => 'Ioannis Igoumenos',
+//  'certificateSubject' => $dn,
+//  'caSubject' => $ca,
+//);
+//     'institution' => 'Dummy Test',
+var_dump($restClient->createUser($create_user_data)); // ok
 
 // Suspend user
 $suspend_payload = array(
@@ -172,7 +179,7 @@ $restore_payload = array(
 );
 
 //$restClient->vomsRestRequest('restore-user.action', $restore_payload);
-var_dump($restClient->vomsRestRequest('user-stats.action')); //  ok
+//var_dump($restClient->vomsRestRequest('user-stats.action')); //  ok
 //$restClient->vomsRestRequest('suspended-users.action'); // ok
 //$restClient->vomsRestRequest('expired-users.action'); // ok
 //$restClient->vomsRestRequest('restore-all-suspended-users.action'); // ok

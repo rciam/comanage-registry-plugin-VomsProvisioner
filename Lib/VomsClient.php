@@ -1,6 +1,6 @@
 <?php
-include_once 'VomsRestClient.php';
-include_once 'enum.php';
+//include_once 'VomsRestClient.php';
+//include_once 'enum.php';
 
 class VomsClient
 {
@@ -62,6 +62,9 @@ class VomsClient
   public function createUser($user_data){
     if(empty($user_data)) {
       return null;
+    }
+    if(empty($user_data['user'])) {
+      // todo: Use the soap client
     }
     return $this->restClient()->vomsRestRequest(VomsRestActionsEnum::CREATE_USER, $user_data);
   }

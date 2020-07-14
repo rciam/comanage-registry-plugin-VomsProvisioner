@@ -27,9 +27,7 @@
  */
 
 App::uses("CoProvisionerPluginTarget", "Model");
-App::uses('HttpSocket', 'Network/Http');
 
-require_once(LOCAL . DS . 'Plugin' . DS . 'VomsProvisioner' . DS . 'Lib' . DS . 'VomsClient.php');
 
 /**
  * Class VomsProvisionerTarget
@@ -48,6 +46,9 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
 
   // Default display field for cake generated views
   public $displayField = "vo";
+
+  private $_voms_rest_client = null;
+  private $_voms_soap_client = null;
 
   // Validation rules for table elements
   public $validate = array(
@@ -100,22 +101,77 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     $this->log(__METHOD__ . "::@", LOG_DEBUG);
     $this->log(__METHOD__ . "::action => ".$op, LOG_DEBUG);
 
-    $robot_cert = $this->getRobotCert($coProvisioningTargetData);
-    $robot_key = $this->getRobotKey($coProvisioningTargetData);
-    $user_cou_related_profile = $this->retrieveUserVoStatus($provisioningData, $coProvisioningTargetData);
-    switch ($op) {
-      case ProvisioningActionEnum::CoPersonUpdated:
-        $this->log(__METHOD__ . "::Person Updated", LOG_DEBUG);
+    // First figure out what to do
+    $voremove = false;
+    $voadd =false;
+    $modify = false;
+
+    switch($op) {
+      case ProvisioningActionEnum::CoPersonAdded:
+        $voadd = true;
         break;
       case ProvisioningActionEnum::CoPersonDeleted:
-        // When deleted remove all the entries in the file by epuid
-        $this->log(__METHOD__ . "::Person deleted", LOG_DEBUG);
+        $voremove = true;
         break;
-      case ProvisioningActionEnum::CoPersonPetitionProvisioned:
+      case ProvisioningActionEnum::CoPersonUpdated:
+      case ProvisioningActionEnum::CoPersonExpired:
+        // An update may cause an existing person to be written to VOMS for the first time
+        // or for an unexpectedly removed entry to be replaced
+        $modify = true;
         break;
       default:
-        // Log noop and fall through.
-        $this->log(__METHOD__ . "::Provisioning action $op not allowed/implemented", LOG_DEBUG);
+        // Ignore all other actions
+        $this->log(__METHOD__ . '::Provisioning action ' . $op . ' not allowed/implemented', LOG_DEBUG);
+        return true;
+        break;
+    }
+
+    $user_cou_related_profile = $this->retrieveUserCouRelatedStatus($provisioningData, $coProvisioningTargetData);
+
+    // XXX In order to perform any action we need at least on valid certificate. If none is provided then
+    // XXX throw an error
+    if(empty($user_cou_related_profile['Cert'])) {
+      throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
+    }
+
+    //XXX Get an instance to the Rest and Soap Clients
+    if($modify || $voremove || $voadd){
+      // Get my certificates
+      $robot_cert = $this->getRobotCert($coProvisioningTargetData);
+      $robot_key = $this->getRobotKey($coProvisioningTargetData);
+      // Instantiate Rest Client
+      $this->_voms_rest_client = $this->getVomsClient($coProvisioningTargetData["CoVomsProvisionerTarget"]['host'],
+        $coProvisioningTargetData["CoVomsProvisionerTarget"]['port'],
+        $coProvisioningTargetData["CoVomsProvisionerTarget"]['vo'],
+        $robot_cert,
+        $robot_key);
+      // Instantiate Soap Client
+    } else {
+      return true;
+    }
+
+    // XXX Now perform an action
+
+    // The CO Person is not part of the COU
+    if(empty($user_cou_related_profile["CoPersonRole"])
+       && $modify) {
+      // todo: Remove COPerson from VOMS
+      return true;
+    }
+
+    // The user is in the COU
+    if(!empty($user_cou_related_profile["CoPersonRole"])) {
+      if($modify
+         && ($user_cou_related_profile["CoPersonRole"][0]["status"] === StatusEnum::Expired
+             || $user_cou_related_profile["CoPersonRole"][0]["status"] === StatusEnum::Deleted)) {
+          // XXX I will translate this as suspended
+          return true;
+      }
+      // XXX add user into VOMS
+      $user_payload = $this->getUserData($user_cou_related_profile, $provisioningData);
+      $response = $this->_voms_rest_client->createUser($user_payload);
+      // todo: handle the response
+      $this->log(__METHOD__ . "::provisioning response: " . print_r($response, true), LOG_DEBUG);
     }
 
     return true;
@@ -123,9 +179,11 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
 
 
   /**
-   * @param $provisioningData
-   * @param $coProvisioningTargetData
-   * @throws InvalidArgumentException
+   * CO Person profile based on COU and Group ID. The profile is constructed based on OrgIdentities linked to COPerson.
+   *
+   * @param array $provisioningData
+   * @param array $coProvisioningTargetData
+   * @return array
    */
   protected function retrieveUserCouRelatedStatus($provisioningData, $coProvisioningTargetData) {
     $this->log(__METHOD__ . "::@", LOG_DEBUG);
@@ -140,37 +198,45 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     $args['contain']= false;
     $provision_group_ret = $this->CoProvisioningTarget->find('first', $args);
     $co_group_id = $provision_group_ret["CoProvisioningTarget"]["provision_co_group_id"];
-    $user_memberships_profile = Hash::flatten($provisioningData['CoGroupMember']);
 
-    $in_group = array_search($co_group_id, $user_memberships_profile);
+    $user_memberships_profile = !is_array($provisioningData['CoGroupMember']) ? array()
+                                : Hash::flatten($provisioningData['CoGroupMember']);
+
+    $in_group = array_search($co_group_id, $user_memberships_profile, true);
+
     if(!empty($in_group)){
       $index = explode('.', $in_group, 2)[0];
       $user_membership_status = $provisioningData['CoGroupMember'][$index];
+      // XXX Do not set the cou_id unless you are certain of it value
       $cou_id = $user_membership_status["CoGroup"]["cou_id"];
     }
 
     // Create the profile of the user according to the group_id and cou_id of the provisioned
     // resources that we configured
+    // XXX i can not let COmanage treat $cou_id = null as ok since i allow Null COUs. This means that
+    // XXX we will get back the default CO Role, which will be the wrong one.
     $args = array();
     $args['conditions']['CoPerson.id'] = $provisioningData["CoPerson"]["id"];
-    $args['contain']['CoPersonRole'] = array(
-      'conditions' => ['CoPersonRole.cou_id' => $cou_id],
-    );
+    if(isset($cou_id)) {
+      $args['contain']['CoPersonRole'] = array(
+        'conditions' => ['CoPersonRole.cou_id' => $cou_id],  // XXX Be carefull with the null COUs
+      );
+    }
     $args['contain']['CoGroupMember']= array(
       'conditions' => ['CoGroupMember.co_group_id' => $co_group_id],
     );
     $args['contain']['CoGroupMember']['CoGroup'] = array(
       'conditions' => ['CoGroup.id' => $co_group_id],
     );
-    // todo: Test if it fetches the org identities Certs
     $args['contain']['CoOrgIdentityLink']['OrgIdentity']['Cert'] = array(
       'conditions' => ['Cert.issuer is not null'],
     );
 
     // XXX Filter with this $user_profile["CoOrgIdentityLink"][2]["OrgIdentity"]["Cert"]
-    // We can not perform any action with VOMS without a Certificate having both a subjectDN and an Issuer
-    // Keep in depth level 1 only the non empty Certificates
+    // XXX We can not perform any action with VOMS without a Certificate having both a subjectDN and an Issuer
+    // XXX Keep in depth level 1 only the non empty Certificates
     $user_profile = $this->CoProvisioningTarget->Co->CoPerson->find('first', $args);
+
     foreach($user_profile["CoOrgIdentityLink"] as $link) {
       if(!empty($link["OrgIdentity"]["Cert"])) {
         foreach ($link["OrgIdentity"]["Cert"] as $cert) {
@@ -179,12 +245,19 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       }
     }
 
+    // No lets fetch the orgidentities linked with the certificates
+    if(!empty($user_profile['Cert'])) {
+      // Extract the Certificate ids
+      $cert_ids = Hash::extract($user_profile['Cert'], '{n}.id');
+      $args=array();
+      $args['conditions']['Cert.id'] = $cert_ids;
+      $args['contain'] = array('OrgIdentity');
+      $args['contain']['OrgIdentity'][] = 'TelephoneNumber';
+      $args['contain']['OrgIdentity'][] = 'Address';
+      $this->Cert = ClassRegistry::init('Cert');
+      $user_profile['Cert'] = $this->Cert->find('all', $args);
+    }
 
-    // XXX In $provisioningData
-    // XXX The user is a member even if suspended.
-    // XXX The user's role is not fetched if SUSPENDED
-    $this->log(__METHOD__ . "::user membership status". print_r($user_membership_status),LOG_DEBUG);
-    $this->log(__METHOD__ . "::user roles status". print_r($user_profile),LOG_DEBUG);
     return $user_profile;
   }
 
@@ -214,5 +287,92 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     }
     $key_base64 = $coProvisioningTargetData["CoVomsProvisionerTarget"]["robot_key"];
     return base64_decode($key_base64);
+  }
+
+  /**
+   * @param string $host
+   * @param integer $port
+   * @param string $vo_name
+   * @param string $robot_cert
+   * @param string $robot_key
+   * @return Object VomsClient
+   */
+  protected function getVomsClient($host, $port, $vo_name, $robot_cert, $robot_key) {
+    if(is_null($this->_voms_rest_client)) {
+      $this->_voms_rest_client = new VomsClient($host, $port, $vo_name, $robot_cert, $robot_key);
+    }
+    return $this->_voms_rest_client;
+  }
+
+  /**
+   * array (
+      'user' => array(
+        'emailAddress' => 'ioigoume@test.com',
+        'institution' => 'Dummy Test',
+        'phoneNumber' => '6936936937',
+        'surname' => 'Igoumenos',
+        'name' => 'Ioannis',
+        'address' => 'No where....',
+      ),
+      'certificateSubject' => $dn,
+      'caSubject' => $ca,
+     );
+   * @param array $user_profile
+   * @param array $provisioningData
+   * @return array
+   * @todo constuct the correct format of user data. We need different format for Soap and Rest
+   */
+  protected function getUserData($user_profile, $provisioningData) {
+    $user_data = array();
+    $user_data['user']['emailAddress'] = !empty($provisioningData["EmailAddress"][0]["mail"])
+                                         ? $provisioningData["EmailAddress"][0]["mail"]
+                                         : 'unknown@mail.com';
+    $user_data['user']['surname'] = $provisioningData["PrimaryName"]["family"];
+    $user_data['user']['name'] = $provisioningData["PrimaryName"]["given"];
+    $user_data['user']['phoneNumber'] = !empty($user_profile["Cert"][0]["OrgIdentity"]["TelephoneNumber"])
+                                        ? $user_profile["Cert"][0]["OrgIdentity"]["TelephoneNumber"][0]['number']
+                                        : '696969699';
+    $user_data['user']['institution'] = !empty($user_profile["Cert"][0]["OrgIdentity"]["o"])
+                                        ? $user_profile["Cert"][0]["OrgIdentity"]["o"]
+                                        : $this->getOFromSbjtDN($user_profile['Cert'][0]['Cert']['subject']);
+    $user_data['certificateSubject'] = $user_profile['Cert'][0]['Cert']['subject'];
+    $user_data['caSubject'] = $user_profile['Cert'][0]['Cert']['issuer'];
+    $user_data['user']['address'] = 'Unknown';
+
+    if(!empty($user_profile["Cert"][0]["OrgIdentity"]["Address"])) {
+      $street = $user_profile["Cert"][0]["OrgIdentity"]["Address"][0]['street'];
+      $country = $user_profile["Cert"][0]["OrgIdentity"]["Address"][0]['country'];
+      $user_data['user']['address'] = $street . '/' . $country;
+    }
+
+    return $user_data;
+  }
+
+  /**
+   * Extract Organization(O) from Subject DN
+   * @param string $subjectDN.
+   * @return string Organization or empty
+   */
+  protected function getOFromSbjtDN($subjectDN) {
+    $re = '/O=(.*?)[\/,].*/m';
+    preg_match_all($re, $subjectDN, $matches, PREG_SET_ORDER, 0);
+    if(!empty($matches[0][1])) {
+      return $matches[0][1];
+    }
+    return 'Unknown';
+  }
+
+  /**
+   * Extract Canonical Name(CN) from Subject DN
+   * @param string $subjectDN.
+   * @return string Organization or empty
+   */
+  protected function getCNFromSbjtDN($subjectDN) {
+    $re = '/CN=(.*?)[\/,].*/m';
+    preg_match_all($re, $subjectDN, $matches, PREG_SET_ORDER, 0);
+    if(!empty($matches[0][1])) {
+      return $matches[0][1];
+    }
+    return 'Unknown';
   }
 }

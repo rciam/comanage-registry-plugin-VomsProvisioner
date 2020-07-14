@@ -1,5 +1,5 @@
 <?php
-require_once 'VomsHttp.php';
+//require_once 'VomsHttp.php';
 
 class VomsRestClient extends VomsHttp {
 
