@@ -27,7 +27,7 @@ $vo = 'checkin-integration';
 $action = 'getUser';
 
 //$dn = 'CN=Ioannis Igoumenos 3aRVXSXXqXM1ysaG,O=EGI Foundation,OU=AAI-Pilot,O=EGI'; // GRNET
-$dn = ' CN=IOANNIS IGOUMENOS IPYuCDUQz9Pd0Fzn,O=EGI Foundation,OU=AAI-Pilot,O=EGI '; // LINKEDIN
+$dn = 'CN=IOANNIS IGOUMENOS IPYuCDUQz9Pd0Fzn,O=EGI Foundation,OU=AAI-Pilot,O=EGI'; // LINKEDIN
 $ca = '/O=EGI/OU=AAI-Pilot/CN=EGI Simple Demo CA';
 
 $base_url = 'https://' . $host . ':' . $port . '/voms/' . $vo . '/services/'; //VOMSAdmin';
@@ -111,6 +111,7 @@ do_curl_from_class($base_url, $action, $get_user_data, $user_cert, $user_key);
 
 function do_curl_from_class($base_url, $action, $post_fields, $user_cert, $user_key)
 {
+  /*
   $user_fcert = tempnam("/tmp", "user_cert_tmpfile");
   $handle_fcert = fopen($user_fcert, "w");
   fwrite($handle_fcert, $user_cert);
@@ -122,17 +123,19 @@ function do_curl_from_class($base_url, $action, $post_fields, $user_cert, $user_
   fwrite($handle_fkey, $user_key);
   fclose($handle_fkey);
   chmod($user_fkey, 0644);
-  echo 'BASEURL: '.$base_url;
+  echo 'BASEURL: '.$base_url;*/
 
+
+$host = 'voms2.hellasgrid.gr';
+$port = '8443';
+$vo = 'checkin-integration';
+  $params = array($host, $port, $vo, $user_cert, $user_key);
   //Create a soapVoms
-  $soapVoms = new VomsSoapClient($base_url,$user_fcert,$user_fkey);
+  $soapVoms = new VomsSoapClient(...$params);
   $parameters['certificateSubject'] = $post_fields['certificateSubject'];
   $parameters['caSubject'] = $post_fields['caSubject'];
-  //$soapVoms->getUser($parameters);
-  $soapVoms->deleteUser($parameters);
-  //Problem with createRole, assignRole, deleteRole with the roleName
-  //$parameters['roleName'] = 'anotherRole';
-  //$parameters['groupName'] = 'checkin-integration';
-  //$soapVoms->createRole($param);
-  //$soapVoms->assignRole($parameters);
+
+  //actions : getUser, deleteUser
+  var_dump($soapVoms->vomsRestRequest("deleteUser",$parameters,true));
+ 
 }
