@@ -52,34 +52,16 @@ abstract class VomsHttp
   abstract protected function getReqLocation();
 
   /**
-   * create the Request
+   * create the Request, either Rest or Soap
    */
-  abstract public function vomsRestRequest($action, $post_fields, $debug);
+  abstract public function vomsRequest($action, $post_fields, $debug);
 
   /**
-   * @param bool $json_content
-   * @param array $head_fields
+   * Construct the Headers for the request
+   * @param boolean $content whether you have a content or not
    * @return string[] Array of Http Headers
    */
-  protected function constructHeaders($json_content=false, $head_fields=array())
-  {
-    // Create HttpHeaders
-    $http_headers = [
-      'X-VOMS-CSRF-GUARD' => '',
-    ];
-    if($json_content){
-      $http_headers['Content-Type'] = 'application/json; charset=utf-8';
-      $http_headers['Accept'] = 'application/json';
-    }
-
-    if(!empty($head_fields)) {
-      foreach ($head_fields as $key => $field) {
-        $http_headers[$key] = $field;
-      }
-    }
-
-    return $http_headers;
-  }
+  abstract protected function constructHeaders($content);
 
   /**
    * @return string|null

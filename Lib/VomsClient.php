@@ -66,7 +66,7 @@ class VomsClient
     if(empty($user_data['user'])) {
       // todo: Use the soap client
     }
-    return $this->restClient()->vomsRestRequest(VomsRestActionsEnum::CREATE_USER, $user_data);
+    return $this->restClient()->vomsRequest(VomsRestActionsEnum::CREATE_USER, $user_data);
   }
 
   public function deleteUser() {
@@ -94,7 +94,7 @@ class VomsClient
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function getUserStats() {
-    return $this->restClient()->vomsRestRequest(VomsRestActionsEnum::USER_STATS);
+    return $this->restClient()->vomsRequest(VomsRestActionsEnum::USER_STATS);
   }
 
   /**
@@ -102,7 +102,7 @@ class VomsClient
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function getSuspendedUsers() {
-    return $this->restClient()->vomsRestRequest(VomsRestActionsEnum::GET_SUSPENDED_USERS);
+    return $this->restClient()->vomsRequest(VomsRestActionsEnum::GET_SUSPENDED_USERS);
   }
 
   /**
@@ -110,7 +110,7 @@ class VomsClient
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function getExpiredUsers() {
-    return $this->restClient()->vomsRestRequest(VomsRestActionsEnum::GET_EXPIRED_USERS);
+    return $this->restClient()->vomsRequest(VomsRestActionsEnum::GET_EXPIRED_USERS);
   }
 
   public function restoreUser() {
@@ -122,6 +122,6 @@ class VomsClient
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function restoreAllSuspendedUsers() {
-    return $this->restClient()->vomsRestRequest(VomsRestActionsEnum::RESTORE_ALL_SUSPENDED_USERS);
+    return $this->restClient()->vomsRequest(VomsRestActionsEnum::RESTORE_ALL_SUSPENDED_USERS);
   }
 }

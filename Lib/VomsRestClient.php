@@ -11,12 +11,27 @@ class VomsRestClient extends VomsHttp {
   }
 
   /**
+   * @return string[] Array of Http Headers
+   */
+  protected function constructHeaders($content=false)
+  {
+    // Create HttpHeaders
+    $http_headers = ['X-VOMS-CSRF-GUARD' => ''];
+    if($content) {
+      $http_headers['Content-Type'] = 'application/json; charset=utf-8';
+      $http_headers['Accept'] = 'application/json';
+    }
+
+    return $http_headers;
+  }
+
+  /**
    * @param $action
    * @param array $post_fields
    * @param boolean $debug
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
-  public function vomsRestRequest($action, $post_fields=array(), $debug=false) {
+  public function vomsRequest($action, $post_fields=array(), $debug=false) {
     try{
       $client = $this->httpClient();
       $options = [

@@ -1,6 +1,5 @@
 <?php
-require_once '../Vendor/autoload.php';
-require_once 'VomsHttp.php';
+//require_once 'VomsHttp.php';
 
 class VomsSoapClient extends VomsHttp{
 
@@ -8,38 +7,30 @@ class VomsSoapClient extends VomsHttp{
    * 
    * @return string Request Location
    */
-  protected function getRegLocation()
+  protected function getReqLocation()
   {
     return '/voms/' . $this->vo_name . '/services';
   }
 
   /**
    * @param bool $json_content
-   * @param array $head_fields
+   * @param boolean $content whether you have a content or not
    * @return string[] Array of Http Headers
    */
-  protected function constructHeaders($json_content = false, $head_fields = array())
+  protected function constructHeaders($content = false)
   {
     // Create HttpHeaders
     $http_headers = [
-      'X-VOMS-CSRF-GUARD' => '\'\'',
+      'X-VOMS-CSRF-GUARD' => '',
     ];
-    if ($json_content) {
+    if ($content) {
       // Create HttpHeaders
-
       $http_headers['Content-Type'] = 'text/xml;charset="utf-8"';
       $http_headers['Accept'] = 'text/xml';
       $http_headers['Cache-Control'] = 'no-cache';
       $http_headers['Pragma'] = 'no-cache';
       $http_headers['SOAPAction'] = '\'\'';
     }
-
-    if (!empty($head_fields)) {
-      foreach ($head_fields as $key => $field) {
-        $http_headers[$key] = $field;
-      }
-    }
-
     return $http_headers;
   }
 
@@ -49,7 +40,7 @@ class VomsSoapClient extends VomsHttp{
    * @param boolean $debug
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
-  public function vomsSoapRequest($action, $post_fields = array(), $debug = false)
+  public function vomsRequest($action, $post_fields = array(), $debug = false)
   {
     try {
       $client = $this->httpClient();
@@ -70,7 +61,7 @@ class VomsSoapClient extends VomsHttp{
         </soap:Envelope>';
       }
 
-      $response = $client->request('POST', $this->getRegLocation() . '/' . 'VOMSAdmin', $options);
+      $response = $client->request('POST', $this->getReqLocation() . '/' . 'VOMSAdmin', $options);
       return [
         'status_code' => $response->getStatusCode(),
         'body' => $response->getBody()->getContents(),
