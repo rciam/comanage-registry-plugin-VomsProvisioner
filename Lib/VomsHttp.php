@@ -1,7 +1,7 @@
 <?php
 require_once '../Vendor/autoload.php';
 
-class VomsHttp
+abstract class VomsHttp
 {
   protected $host = null;
   protected $port = null;
@@ -46,15 +46,10 @@ class VomsHttp
     }
   }
 
-
   /**
-   * @todo Override this in the case of Soap Request
-   * @return string Request Location
+   * @return the location of the api, e.g. /voms/vo-name/apiv2
    */
-  protected function getRegLocation() {
-    return '/voms/' . $this->vo_name . '/apiv2';
-  }
-
+  abstract protected function getReqLocation();
 
   /**
    * @param bool $json_content
@@ -80,7 +75,6 @@ class VomsHttp
 
     return $http_headers;
   }
-
 
   /**
    * @return string|null
@@ -130,7 +124,6 @@ class VomsHttp
     chmod($user_fkey, 0644);
     return $handle_fkey;
   }
-
 
   /**
    * @return array

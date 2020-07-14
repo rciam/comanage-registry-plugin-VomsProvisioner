@@ -1,5 +1,4 @@
 <?php
-require_once '../Vendor/autoload.php';
 require_once 'VomsHttp.php';
 
 class VomsRestClient extends VomsHttp {
@@ -7,7 +6,7 @@ class VomsRestClient extends VomsHttp {
   /**
    * @return string Request Location
    */
-  protected function getRegLocation() {
+  protected function getReqLocation() {
     return '/voms/' . $this->vo_name . '/apiv2';
   }
 
@@ -27,7 +26,7 @@ class VomsRestClient extends VomsHttp {
       if(!empty($post_fields)) {
         $options['json'] = $post_fields;
       }
-      $response = $client->request('POST', $this->getRegLocation() . '/' . $action, $options);
+      $response = $client->request('POST', $this->getReqLocation() . '/' . $action, $options);
       return [
         'status_code' => $response->getStatusCode(),
         'body' => $response->getBody()->getContents(),
