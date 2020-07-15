@@ -115,6 +115,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
         break;
       case ProvisioningActionEnum::CoPersonUpdated:
       case ProvisioningActionEnum::CoPersonExpired:
+      case ProvisioningActionEnum::CoPersonPetitionProvisioned:
         // An update may cause an existing person to be written to VOMS for the first time
         // or for an unexpectedly removed entry to be replaced
         $modify = true;
