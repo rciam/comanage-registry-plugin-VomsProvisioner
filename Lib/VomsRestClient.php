@@ -42,13 +42,14 @@ class VomsRestClient extends VomsHttp {
         $options['json'] = $post_fields;
       }
       $response = $client->request('POST', $this->getReqLocation() . '/' . $action, $options);
-    } catch (Exception $e) {
-      $response = $e->getResponse();
-
-    } finally {
       return [
         'status_code' => $response->getStatusCode(),
         'msg' => $response->getReasonPhrase(),
+      ];
+    } catch (Exception $e) {
+      return [
+        'status_code' => $e->getCode(),
+        'msg' => $e->getMessage(),
       ];
     }
   }

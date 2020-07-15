@@ -160,7 +160,8 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
                                                   $user_cou_related_profile['Cert'][0]['Cert']['issuer']);
 
       // todo: handle the response
-      $this->log(__METHOD__ . "::provisioning response: " . print_r($response, true), LOG_DEBUG);
+      $this->plogs(__METHOD__, $response);
+      $this->handleResponse($response);
       return true;
     }
 
@@ -176,7 +177,8 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       $user_payload = $this->getUserData($user_cou_related_profile, $provisioningData);
       $response = $this->_voms_client->createUser($user_payload);
       // todo: handle the response
-      $this->log(__METHOD__ . "::provisioning response: " . print_r($response, true), LOG_DEBUG);
+      $this->plogs(__METHOD__, $response);
+      $this->handleResponse($response);
     }
 
     return true;
@@ -379,5 +381,29 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       return $matches[0][1];
     }
     return 'Unknown';
+  }
+
+  /**
+   * @param $method
+   * @param $response
+   */
+  protected function plogs($method, $response) {
+    if(is_array($response)) {
+      $this->log($method . "::" . print_r($response, true), LOG_DEBUG);
+    } else {
+      $this->log($method . "::" . $response, LOG_DEBUG);
+    }
+  }
+
+  /**
+   * @param array $response ['status_code' => integer, 'msg' => string] Response returned by the request action
+   */
+  protected function handleResponse($response) {
+    if(!is_array($response)) {
+      return;
+    }
+    if($response['status_code'] === 0) {
+      throw new RuntimeException($response['msg']);
+    }
   }
 }

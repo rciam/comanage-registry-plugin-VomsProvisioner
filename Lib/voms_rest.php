@@ -165,21 +165,21 @@ $suspend_payload = array(
   'certificateSubject' => $dn,
   'caSubject' => $ca,
 );
-//$restClient->vomsRestRequest('suspend-user.action', $suspend_payload);
+//$restClient->vomsRequest('suspend-user.action', $suspend_payload);
 
 $new_group = array(
   "groupName"=> "test_group_ioigoume",
   "groupDescription" => "This is a test group"
 );
-//$restClient->vomsRestRequest('create-group.action', $new_group);
+//$restClient->vomsRequest('create-group.action', $new_group);
 
 $restore_payload = array(
   'certificateSubject' => 'CN=IOANNIS IGOUMENOS IPYuCDUQz9Pd0Fzn,O=EGI Foundation,OU=AAI-Pilot,O=EGI',
   'caSubject' => '/O=EGI/OU=AAI-Pilot/CN=EGI Simple Demo CA',
 );
 
-//$restClient->vomsRestRequest('restore-user.action', $restore_payload);
-//var_dump($restClient->vomsRestRequest('user-stats.action')); //  ok
-//$restClient->vomsRestRequest('suspended-users.action'); // ok
-//$restClient->vomsRestRequest('expired-users.action'); // ok
-//$restClient->vomsRestRequest('restore-all-suspended-users.action'); // ok
+//$restClient->vomsRequest('restore-user.action', $restore_payload);
+//var_export($restClient->getUserStats()); //  ok
+//$restClient->getSuspendedUsers(); // ok
+//var_dump($restClient->getExpiredUsers()); // ok
+//$restClient->restoreAllSuspendedUsers(); // ok
