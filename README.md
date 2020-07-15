@@ -8,3 +8,19 @@ VOMS admin Client
 - Create Group with description invokes Rest API which will fail
   - Error Message:
 - If you Delete a User via Soap VOMSadmin deletes the User's Certificate but leaves the user behind.
+
+## Installation Instructions
+- Delete the foreign Key in the cm_vos table
+- Remove all references of the Vo Model in around the project
+- Remove all configured instances of the plugin
+- Alter the table in the database
+```sql
+alter table cm_co_voms_provisioner_targets rename column server_url to host;
+alter table cm_co_voms_provisioner_targets alter column host type varchar(256);
+alter table cm_co_voms_provisioner_targets rename column vo_name to vo;
+alter table cm_co_voms_provisioner_targets alter column vo type varchar(96);
+alter table cm_co_voms_provisioner_targets rename column entity_type to robot_cert;
+alter table cm_co_voms_provisioner_targets alter column robot_cert type text;
+alter table cm_co_voms_provisioner_targets add column robot_key text;
+alter table cm_co_voms_provisioner_targets add column port integer;
+```
