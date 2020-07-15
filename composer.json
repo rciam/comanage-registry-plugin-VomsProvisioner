@@ -1,7 +1,6 @@
 {
   "name": "/VomsProvisioner",
   "description": "COmanage provisioner for VOM servers",
-  "minimum-stability": "",
   "license": "Apache-2.0",
   "authors": [
     {
@@ -13,9 +12,16 @@
       "email": "nmastoris@admin.grnet.gr"
     }
   ],
-{
+  "support": {
+    "email": "faai@grnet.gr"
+  },
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/ioigoume/comanage-registry-plugin-VomsProvisioner"
+    }
+  ],
   "require": {
-    "guzzlehttp/guzzle": "~6.0",
+    "guzzlehttp/guzzle": "~6.0"
   }
-}
 }
