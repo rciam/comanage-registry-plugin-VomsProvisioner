@@ -63,15 +63,10 @@ class VomsSoapClient extends VomsHttp{
         </soap:Body>
         </soap:Envelope>';
       }
-
       $response = $client->request('POST', $this->getReqLocation() . '/' . 'VOMSAdmin', $options);
-      return [
-        'status_code' => $response->getStatusCode(),
-        'body' => $response->getBody()->getContents(),
-      ];
     } catch (Exception $e) {
       $response = $e->getResponse();
-
+    } finally {
       return [
         'status_code' => $response->getStatusCode(),
         'msg' => $response->getReasonPhrase(),

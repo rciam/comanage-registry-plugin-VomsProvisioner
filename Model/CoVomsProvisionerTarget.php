@@ -131,7 +131,8 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     // XXX In order to perform any action we need at least on valid certificate. If none is provided then
     // XXX throw an error
     if(empty($user_cou_related_profile['Cert'])) {
-      throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
+      // fixme: Even though i am throwing an exception this is not working
+      throw new RuntimeException(_txt('op.voms_provisioner.nocert'));
     }
 
     //XXX Get an instance to the Rest and Soap Clients
