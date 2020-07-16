@@ -1,7 +1,8 @@
 <?php
 //require_once 'VomsHttp.php';
 
-class VomsSoapClient extends VomsHttp{
+class VomsSoapClient extends VomsHttp
+{
 
   /**
    * 
@@ -33,9 +34,75 @@ class VomsSoapClient extends VomsHttp{
     return $http_headers;
   }
 
-  private function constructEnvelope() {
-
+  /**
+   * constructEnvelope
+   *
+   * @param  mixed $action
+   * @param  mixed $parameters
+   * @return void
+   */
+  private function constructEnvelope($action, $parameters)
+  {
+    $soapEnvelope = new SimpleXMLElement('<soap:Envelope/>', LIBXML_NOERROR, false, 'soap', true);
+    $soapEnvelopeBody = $soapEnvelope->addChild('soap:soap:Body');
+    $soapEnvelopeAction = $soapEnvelopeBody->addChild($action);
+    $soapEnvelopeAction->addAttribute('xmlns', 'http://glite.org/wsdl/services/org.glite.security.voms.service.admin');
+    $soapEnvelope->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+    $soapEnvelope->addAttribute('xmlns:xmlns:xsd', 'http://www.w3.org/2001/XMLSchema');
+    $soapEnvelope->addAttribute('xmlns:xmlns:soap', 'http://schemas.xmlsoap.org/soap/envelope/');
+    $fname = $action . '_payload';
+    try {
+      $this->$fname($soapEnvelopeAction, $parameters);
+    } catch (Exception $e) {
+      $this->Flash->set($e->getMessage(), array('key' => 'error'));
+    }
+    return $soapEnvelope->asXML();
   }
+
+  /**
+   * deleteUser_payload
+   *
+   * @param  mixed $soapEnvelopeAction
+   * @param  mixed $parameters
+   * @return void
+   */
+  private function deleteUser_payload(&$soapEnvelopeAction, $parameters)
+  {
+    $soapEnvelopeAction->addChild('in0', $parameters['certificateSubject']);
+    $soapEnvelopeAction->addChild('in1', $parameters['caSubject']);
+  }
+
+  /**
+   * getUser_payload
+   *
+   * @param  mixed $soapEnvelopeAction
+   * @param  mixed $parameters
+   * @return void
+   */
+  private function getUser_payload(&$soapEnvelopeAction, $parameters)
+  {
+    $soapEnvelopeAction->addChild('in0', $parameters['certificateSubject']);
+    $soapEnvelopeAction->addChild('in1', $parameters['caSubject']);
+  }
+
+  /**
+   * createUser_payload
+   *
+   * @param  mixed $soapEnvelopeAction
+   * @param  mixed $parameters
+   * @return void
+   */
+  private function createUser_payload(&$soapEnvelopeAction, $parameters)
+  {
+    $in0 = $soapEnvelopeAction->addChild('in0');
+    $dnNode = $in0->addChild('DN', $parameters['certificateSubject']);
+    $dnNode->addAttribute('xsi:xsi:type', 'soapenc:string');
+    $caNode = $in0->addChild('CA', $parameters['caSubject']);
+    $caNode->addAttribute('xsi:xsi:type', 'soapenc:string');
+    $cnNode = $in0->addChild('CN', empty($parameters['cn']) ? NULL : $parameters['cn']);
+    $cnNode->addAttribute('xsi:xsi:type', 'soapenc:string');
+  }
+
 
   /**
    * @param $action
@@ -52,16 +119,7 @@ class VomsSoapClient extends VomsHttp{
         'headers' => $this->constructHeaders(!empty($post_fields)),
       ];
       if (!empty($post_fields)) {
-
-        $options['body'] = '<?xml version="1.0" encoding="utf-8"?>
-        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-        <soap:Body>
-        <' . $action . ' xmlns="http://glite.org/wsdl/services/org.glite.security.voms.service.admin">
-        <in0>' . $post_fields['certificateSubject'] . '</in0> 
-        <in1>' . $post_fields['caSubject'] . '</in1> 
-        </' . $action . '>
-        </soap:Body>
-        </soap:Envelope>';
+        $options['body'] = $this->constructEnvelope($action, $post_fields);
       }
       $response = $client->request('POST', $this->getReqLocation() . '/' . 'VOMSAdmin', $options);
       return [
