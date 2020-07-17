@@ -23,3 +23,12 @@ class VomsClientEnum {
   const REST_LOCATION = 'voms';
   const CSRF_GUARD = 'X-voms-csrf-guard';
 }
+
+class VomsServerConfigEnum {
+  const BULK = 'B';
+  const SINGLE = 'S';
+  const type = array(
+    'B' => 'Bulk',
+    'S' => 'Single',
+  );
+}

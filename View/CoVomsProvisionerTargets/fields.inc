@@ -51,6 +51,8 @@ $this->Html->addCrumb(_txt('ct.co_provisioning_targets.pl'), $args);
 $crumbTxt = _txt('op.' . $this->action . '-a', array(_txt('ct.co_voms_provisioner_targets.1')));
 $this->Html->addCrumb($crumbTxt);
 
+
+
 print $this->Form->hidden('co_id', array('default' => $cur_co['Co']['id'])) . "\n";
 print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_ptid)) . "\n";
 
@@ -58,32 +60,7 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
 // todo: Perhaps i could use this to configure the provisioner automagically
 
 ?>
-<style>
-  .progress {
-    background-color: rgba(0, 0, 0, 0.15) !important;
-    vertical-align: bottom;
-    display: none;
-  }
-  .progress-bar {
-    width: 100%;
-    height: 100%;
-  }
-  .volume-slider {
-    bottom: 0px;
-    height: 0.25em !important;
-    position: absolute;
-    width: 6.65em;
-  }
-  .upload-done {
-    background: green;
-    border-radius: 50%;
-    color: white;
-    vertical-align: middle !important;
-    display: none;
-  }
-</style>
 
-<script src="<?= $this->request->webroot . 'voms_provisioner' ?>/jquery/jquery.base64.js"></script>
 <script type="text/javascript">
 
     // todo: Investigate more on filereader. It would be better if we made this a promise
@@ -140,7 +117,7 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
         }
         fileReader.readAsText(file);
     }
-    $(document).ready(function () {
+    $(function() {
         // Read the Robot Cert
         $('#robot_cert[type=file]').change((event) => {
             $('#cert-done').hide();
@@ -151,6 +128,16 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
         $('#robot_key[type=file]').change((event) => {
             $('#key-done').hide();
             read_file(event, 'BEGIN PRIVATE KEY', $('#CoVomsProvisionerTargetRobotKey'), 'key');
+        });
+
+        $('#voms-server-add-btn').on('click', () => {
+            // XXX Use ES6 template literal(Template Strings) to load the template
+            $("body").append(`<?php print $this->element('modal')?>`);
+            $('#vomsAddModal').modal();
+            $('#vomsAddModal').animate({
+                scrollTop: 0
+            }, 'slow');
+             // $('#myInput').focus();
         });
     });
 </script>
@@ -170,39 +157,53 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
     </div>
     <div class="field-info">
       <?php
-        $options = array(
-          'size'      => 50,
-          'maxlength' => 96,
-          'type'      => 'text',
-        );
         if(isset($vv_cou_name)) {
-          $options['readonly'] = true;
-          $options['value'] = $vv_cou_name;
+          print $vv_cou_name;
+        } else {
+          $options = array(
+            'size'      => 50,
+            'maxlength' => 96,
+            'type'      => 'text',
+          );
+          print $this->Form->input('vo', $options);
         }
-        print $this->Form->input('vo', $options);
       ?>
     </div>
   </li>
-  <li>
-    <div class="field-name">
-      <div class="field-title"><?php print _txt('pl.voms_provisioner.host'); ?>
+  <li style="display: flex;">
+    <div class="field-name field-name-flex">
+      <div class="field-title">
+        <?php print _txt('pl.voms_provisioner.serveruri'); ?>
         <span class="required">*</span>
       </div>
-      <div class="field-desc"><?php print _txt('pl.voms_provisioner.host.desc'); ?></div>
+      <div class="field-desc"><?php print _txt('pl.voms_provisioner.serveruri.desc'); ?></div>
     </div>
     <div class="field-info">
-      <?php print ($e ? $this->Form->input('host', array('size' => 50, 'maxlength'=>'256')) : filter_var($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['host'],FILTER_SANITIZE_SPECIAL_CHARS)); ?>
-    </div>
-  </li>
-  <li>
-    <div class="field-name">
-      <div class="field-title">
-        <?php print _txt('pl.voms_provisioner.port'); ?>
-      </div>
-      <div class="field-desc"><?php print _txt('pl.voms_provisioner.port.desc'); ?></div>
-    </div>
-    <div class="field-info">
-      <?php print ($e ? $this->Form->input('port', array('type' => 'number')) : filter_var($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['port'],FILTER_SANITIZE_SPECIAL_CHARS)); ?>
+      <ul style="padding-inline-start:unset;">
+        <?php $tmp = [1,2,3,4]; ?>
+        <?php foreach($tmp as $t): ?>
+        <?php
+          $base_uri = '';
+          if (!empty(filter_var($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['host']))
+              && !empty(filter_var($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['port'],FILTER_SANITIZE_SPECIAL_CHARS))
+              && !empty(filter_var($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['vo'],FILTER_SANITIZE_SPECIAL_CHARS))){
+            $base_uri = 'https://' . filter_var($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['host']) . ':'
+                        . filter_var($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['port'],FILTER_SANITIZE_SPECIAL_CHARS)
+                        . '/' . filter_var($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['vo'],FILTER_SANITIZE_SPECIAL_CHARS);
+          }
+
+        ?>
+          <li class="voms-server-list"><b>Server <?php print $t;?>:</b> <?php print $base_uri;?></li>
+        <?php endforeach; ?>
+        <li class="voms-server-list-btn">
+          <a href="#"
+             id='voms-server-add-btn'
+             class='ui-button ui-corner-all ui-widget'>
+            <span class="ui-button-icon ui-icon ui-icon-circle-plus"></span><span class="ui-button-icon-space"> </span>
+            <?php print _txt('fd.voms_provisioner.srv'); ?>
+          </a>
+        </li>
+      </ul>
     </div>
   </li>
   <li>
@@ -214,8 +215,8 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
       <div class="field-desc"><?php print _txt('pl.voms_provisioner.robot_cert.desc'); ?></div>
     </div>
     <div class="field-info">
-      <label for="robot_cert" class="loadbutton ui-button ui-corner-all ui-widget" style="width:6em;">
-        <span class="ui-button-icon ui-icon ui-icon-transferthick-e-w"></span>
+      <label for="robot_cert" class="loadbutton ui-button ui-corner-all ui-widget"">
+        <span class="ui-button-icon ui-icon ui-icon-transferthick-e-w"></span><span class="ui-button-icon-space"> </span>
         <input type="file" id="robot_cert" accept="application/x-x509-ca-cert, .pem" style="display: none"/>
         Load
       </label>
@@ -235,8 +236,8 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
       <div class="field-desc"><?php print _txt('pl.voms_provisioner.robot_key.desc'); ?></div>
     </div>
     <div class="field-info">
-      <label for="robot_key"  class="loadbutton ui-button ui-corner-all ui-widget" style="width:6em;">
-        <span class="ui-button-icon ui-icon ui-icon-transferthick-e-w"></span>
+      <label for="robot_key"  class="loadbutton ui-button ui-corner-all ui-widget"">
+        <span class="ui-button-icon ui-icon ui-icon-transferthick-e-w"></span><span class="ui-button-icon-space"> </span>
         <input type="file" id="robot_key" accept="application/x-x509-ca-cert, .pem" style="display: none"/>
         Load
       </label>

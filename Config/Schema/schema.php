@@ -33,7 +33,7 @@ class AppSchema extends CakeSchema
     'modified' => array('type' => 'datetime', 'null' => true),
     'indexes' => array(
       'PRIMARY' => array('column' => 'id', 'unique' => 1),
-      'cm_co_ssh_key_provisioner_targets_i1' => array('column' => 'co_provisioning_target_id', 'unique' => 1),
+      'co_voms_provisioner_targets_i1' => array('column' => 'co_provisioning_target_id', 'unique' => 1),
     )
   );
 }
