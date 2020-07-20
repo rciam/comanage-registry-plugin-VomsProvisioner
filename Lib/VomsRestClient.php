@@ -13,11 +13,10 @@ class VomsRestClient extends VomsHttp {
   /**
    * @return string[] Array of Http Headers
    */
-  protected function constructHeaders($content=false)
-  {
+  protected function constructHeaders($content = false) {
     // Create HttpHeaders
     $http_headers = ['X-VOMS-CSRF-GUARD' => ''];
-    if($content) {
+    if ($content) {
       $http_headers['Content-Type'] = 'application/json; charset=utf-8';
       $http_headers['Accept'] = 'application/json';
     }
@@ -31,14 +30,14 @@ class VomsRestClient extends VomsHttp {
    * @param boolean $debug
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
-  public function vomsRequest($action, $post_fields=array(), $debug=false) {
-    try{
+  public function vomsRequest($action, $post_fields = array(), $debug = false) {
+    try {
       $client = $this->httpClient();
       $options = [
         'debug' => $debug,
         'headers' => $this->constructHeaders(!empty($post_fields)),
       ];
-      if(!empty($post_fields)) {
+      if (!empty($post_fields)) {
         $options['json'] = $post_fields;
       }
       $response = $client->request('POST', $this->getReqLocation() . '/' . $action, $options);
