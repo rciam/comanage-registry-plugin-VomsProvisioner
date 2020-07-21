@@ -41,7 +41,7 @@ class CoVomsProvisionerServer extends AppModel {
   public $displayField = "host";
 
   public $validate = array(
-    'co_voms_provisioning_target_id' => array(
+    'co_voms_provisioner_target_id' => array(
       'rule' => 'numeric',
       'required' => true,
       'message' => 'A CO VOMS PROVISIONING TARGET ID must be provided'

@@ -66,6 +66,7 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
     var vo_name = 'eli-beams.eu';
 
     // todo: Investigate more on filereader. It would be better if we made this a promise
+    // todo: move on separate file
     function read_file(event, validation_string, input_textbox, file_type) {
         const fileList = event.target.files;
         if (!fileList || fileList.length < 1) {
@@ -119,6 +120,19 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
         }
         fileReader.readAsText(file);
     }
+
+    // Generate flash notifications for messages
+    function generateLinkFlash(text, type, timeout) {
+        var n = noty({
+            text: text,
+            type: type,
+            dismissQueue: true,
+            layout: 'topCenter',
+            theme: 'comanage',
+            timeout: timeout
+        });
+    }
+
     $(function() {
         // Read the Robot Cert
         $('#robot_cert[type=file]').change((event) => {
@@ -158,8 +172,10 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
       <?php
         if(!empty($vv_cou_name)) {
           print $vv_cou_name;
-        } elseif(!empty(filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]["vo"]))) {
+          print $this->Form->hidden('vo', array('default' => $vv_cou_name . "\n"));
+      } elseif(!empty(filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]["vo"]))) {
           print filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]["vo"]);
+          print $this->Form->hidden('vo', array('default' => filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]["vo"]) . "\n"));
         } else {
           $options = array(
             'size'      => 50,
@@ -187,7 +203,7 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
                       . filter_var($server['port'],FILTER_SANITIZE_SPECIAL_CHARS)
                       . '/' . filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]["vo"],FILTER_SANITIZE_SPECIAL_CHARS);
         ?>
-          <li class="voms-server-list"><b>Server <?php print $t;?>:</b> <?php print $base_uri;?></li>
+          <li class="voms-server-list"><b>Server: </b><?php print $base_uri;?></li>
         <?php endforeach; ?>
         <li class="voms-server-list-btn">
           <a href="#"

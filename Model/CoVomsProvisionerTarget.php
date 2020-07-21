@@ -54,14 +54,6 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     ),
   );
 
-  public $duplicatableModels = array(
-    // Must explicitly list this model in the order it should be duplicated
-    "CoVomsProvisionerTarget" => array(
-      "parent" => "CoProvisioningTarget",
-      "fk"     => "co_provisioning_target_id"
-    ),
-  );
-
   private $_voms_client = null;
 
   // Validation rules for table elements
@@ -70,11 +62,6 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       'rule' => 'numeric',
       'required' => true,
       'message' => 'A CO PROVISIONING TARGET ID must be provided'
-    ),
-    'co_voms_provisioning_server_id' => array(
-      'rule' => 'numeric',
-      'required' => true,
-      'message' => 'A CO VOMS PROVISIONING SERVER ID must be provided'
     ),
     'vo' => array(
       'rule' => 'notBlank',
@@ -418,4 +405,5 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       throw new RuntimeException($response['msg']);
     }
   }
+
 }

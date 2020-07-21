@@ -32,9 +32,6 @@
     <field name="co_provisioning_target_id" type="I">
       <constraint>REFERENCES cm_co_provisioning_targets(id)</constraint>
     </field>
-    <field name="co_voms_provisioner_server_id" type="I">
-      <constraint>REFERENCES cm_co_voms_provisioner_servers(id)</constraint>
-    </field>
     <field name="vo" type="C" size="96" />
     <field name="robot_cert" type="X" />
     <field name="robot_key" type="X" />
@@ -60,10 +57,5 @@
     <field name="dn" type="C" size="256" />
     <field name="created" type="T" />
     <field name="modified" type="T" />
-    
-    <index name="co_voms_provisioner_server_i1">
-      <col>co_voms_provisioner_target_id</col>
-      <unique />
-    </index>
   </table>
 </schema>

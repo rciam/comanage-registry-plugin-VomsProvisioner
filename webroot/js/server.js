@@ -17,13 +17,15 @@ function toggle_server_load_mode(selected_val) {
 function requestMode() {
     if ($('.bulk-mode').is(':visible')
         && $('.single-mode').is(':hidden')) {
-        bulkVomsGet($('#bulkURL').val());
+        bulkVomsGet($('#bulkURL').val().trim());
     }
 }
 
 function bulkVomsGet(url) {
     // todo:Use this approach as a failover. First do the straight forward way
-    fetch('https://jsonp.afeld.me/?url=' + url)
+    fetch('https://jsonp.afeld.me/?url=' + url, {
+        method: 'GET',
+    })
         .then(response => {
             return response.json();
         })
@@ -33,7 +35,11 @@ function bulkVomsGet(url) {
             // dismiss modal
             $('#vomsAddModal').modal('hide');
         })
-        .catch();
+        .catch(error => {
+            generateLinkFlash(error, "error", 5000);
+            console.log('bulk fetch error: ' + error);
+            $('#vomsAddModal').modal('hide');
+        });
 }
 
 function addSingle() {
@@ -44,12 +50,11 @@ function addSingle() {
 // Then append li and input elements in the body of the edit view
 function parseJsonVoms(data) {
     $.each(data, (index, value) => {
-        if(value.VOName === vo_name) {
+        if (value.VOName === vo_name) {
             // Now i have my vo data
             let servers = value.VOMSServers;
             let servers_list = $('#co_voms_provisioner_servers_list');
-            let voms_prov_form = $('#CoVomsProvisionerTargetEditForm');
-            if (servers.length !== 0 ) {
+            if (servers.length !== 0) {
                 // Empty the server list
                 servers_list.find('.voms-server-list').remove();
                 // Remove all the hidden fields
@@ -64,9 +69,10 @@ function parseJsonVoms(data) {
                 debugger;
                 let base_uri = 'https://' + host + ':' + port + '/' + vo_name;
                 servers_list.prepend('<li class="voms-server-list"><b>Server: </b>' + base_uri + '</li>');
-                voms_prov_form.prepend('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][host]" value=' + host + ' id="CoVomsProvisionerServerHost">');
-                voms_prov_form.prepend('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][port]" value=' + port + ' id="CoVomsProvisionerServerPort">');
-                voms_prov_form.prepend('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][dn]" value=' + dn + ' id="CoVomsProvisionerServerDn">');
+                last_element = $('form > input[type=hidden]').last();
+                $('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][host]" value=' + host + ' id="CoVomsProvisionerServerHost">').insertAfter(last_element);
+                $('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][port]" value=' + port + ' id="CoVomsProvisionerServerPort">').insertAfter(last_element);
+                $('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][dn]" value=' + dn + ' id="CoVomsProvisionerServerDn">').insertAfter(last_element);
             });
             debugger;
         }
