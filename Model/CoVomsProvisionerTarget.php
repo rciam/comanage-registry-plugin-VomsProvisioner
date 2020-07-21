@@ -47,6 +47,21 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
   // Default display field for cake generated views
   public $displayField = "vo";
 
+  public $hasMany = array(
+    "CoVomsProvisionerServer" => array(
+      'className' => 'VomsProvisioner.CoVomsProvisionerServer',
+      'dependent' => true
+    ),
+  );
+
+  public $duplicatableModels = array(
+    // Must explicitly list this model in the order it should be duplicated
+    "CoVomsProvisionerTarget" => array(
+      "parent" => "CoProvisioningTarget",
+      "fk"     => "co_provisioning_target_id"
+    ),
+  );
+
   private $_voms_client = null;
 
   // Validation rules for table elements
@@ -56,16 +71,10 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       'required' => true,
       'message' => 'A CO PROVISIONING TARGET ID must be provided'
     ),
-    'host' => array(
-      'rule' => 'notBlank',
+    'co_voms_provisioning_server_id' => array(
+      'rule' => 'numeric',
       'required' => true,
-      'allowEmpty' => false
-    ),
-    'port' => array(
-      'rule' => array('range', 1, 65535),
-      'message' => 'Please enter value from 1-65535',
-      'required' => false,
-      'allowEmpty' => true
+      'message' => 'A CO VOMS PROVISIONING SERVER ID must be provided'
     ),
     'vo' => array(
       'rule' => 'notBlank',

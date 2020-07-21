@@ -180,18 +180,11 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
     </div>
     <div class="field-info">
       <ul style="padding-inline-start:unset;">
-        <?php $tmp = [1,2,3,4]; ?>
-        <?php foreach($tmp as $t): ?>
+        <?php foreach($co_voms_provisioner_targets[0]["CoVomsProvisionerServer"] as $server): ?>
         <?php
-          $base_uri = '';
-          if (!empty(filter_var($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['host']))
-              && !empty(filter_var($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['port'],FILTER_SANITIZE_SPECIAL_CHARS))
-              && !empty(filter_var($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['vo'],FILTER_SANITIZE_SPECIAL_CHARS))){
-            $base_uri = 'https://' . filter_var($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['host']) . ':'
-                        . filter_var($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['port'],FILTER_SANITIZE_SPECIAL_CHARS)
-                        . '/' . filter_var($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['vo'],FILTER_SANITIZE_SPECIAL_CHARS);
-          }
-
+          $base_uri = 'https://' . filter_var($server['host']) . ':'
+                      . filter_var($server['port'],FILTER_SANITIZE_SPECIAL_CHARS)
+                      . '/' . filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]["vo"],FILTER_SANITIZE_SPECIAL_CHARS);
         ?>
           <li class="voms-server-list"><b>Server <?php print $t;?>:</b> <?php print $base_uri;?></li>
         <?php endforeach; ?>

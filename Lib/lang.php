@@ -23,7 +23,7 @@ $cm_voms_provisioner_texts['en_US'] = array(
   'pl.voms_provisioner.serveruri'          => 'Server URI',
   'pl.voms_provisioner.serveruri.desc'     => 'VOMS Base Server URI(s)',
   'pl.voms_provisioner.bulkurl'            => 'Bulk URL',
-  'pl.voms_provisioner.bulkurl.desc'       => 'This is a URL containing a JSON formatted list of provided VOMS for each VO.Check <a href="#">link</a> for further info.',
+  'pl.voms_provisioner.bulkurl.desc'       => 'This is a URL containing a JSON formatted list of provided VOMS for each VO.<br>Check <a href="#">link</a> for further info.',
   'pl.voms_provisioner.host'               => 'Domain',
   'pl.voms_provisioner.host.desc'          => 'VOMS domain name that will be used to form the VOMS base URI',
   'pl.voms_provisioner.dn'                 => 'DN',
