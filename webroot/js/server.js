@@ -34,6 +34,7 @@ function bulkVomsGet(url) {
             parseJsonVoms(data);
             // dismiss modal
             $('#vomsAddModal').modal('hide');
+            $('#voms-server-clr-btn').show();
         })
         .catch(error => {
             generateLinkFlash(error, "error", 5000);
@@ -54,6 +55,9 @@ function parseJsonVoms(data) {
             // Now i have my vo data
             let servers = value.VOMSServers;
             let servers_list = $('#co_voms_provisioner_servers_list');
+            action_tbl = $('#CoVomsProvisionerTargetEditForm').attr('action').split('/');
+            let co_voms_provisioner_target_id = action_tbl[action_tbl.length - 1];
+            debugger;
             if (servers.length !== 0) {
                 // Empty the server list
                 servers_list.find('.voms-server-list').remove();
@@ -61,15 +65,17 @@ function parseJsonVoms(data) {
                 $('.voms-server-list-input').remove();
 
             }
-            let servers_construct_buffer = [];
+
             $.each(servers, (index, server) => {
                 let host = server.HostName;
                 let port = server.Port;
                 let dn = server.DN;
-                debugger;
                 let base_uri = 'https://' + host + ':' + port + '/' + vo_name;
                 servers_list.prepend('<li class="voms-server-list"><b>Server: </b>' + base_uri + '</li>');
                 last_element = $('form > input[type=hidden]').last();
+                if(co_voms_provisioner_target_id !== '') {
+                    $('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][co_voms_provisioner_target_id]" value=' + co_voms_provisioner_target_id + ' id="CoVomsProvisionerServerCoVomsProvisionerTargetId">').insertAfter(last_element);
+                }
                 $('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][host]" value=' + host + ' id="CoVomsProvisionerServerHost">').insertAfter(last_element);
                 $('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][port]" value=' + port + ' id="CoVomsProvisionerServerPort">').insertAfter(last_element);
                 $('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][dn]" value=' + dn + ' id="CoVomsProvisionerServerDn">').insertAfter(last_element);

@@ -33,6 +33,7 @@ class CoVomsProvisionerTargetsController extends SPTController {
 
   public $uses = array(
     'VomsProvisioner.CoVomsProvisionerTarget',
+    'VomsProvisioner.CoVomsProvisionerServer',
     'CoGroup',
   );
 
@@ -90,6 +91,23 @@ class CoVomsProvisionerTargetsController extends SPTController {
     }
     $this->Flash->set(_txt('er.voms_provisioner.token.blackhauled'), array('key' => 'error'));
     return $this->redirect($location);
+  }
+
+  /**
+   *  Clear the Server List but deleting all entries in the Database
+   */
+  public function clearsrv() {
+    $this->log(__METHOD__ . '::@', LOG_DEBUG);
+    if($this->request->isAjax) {
+      $this->autoRender = false;
+      $this->layout = null;
+      // First check if there are any data perform you execute delete
+      if($this->CoVomsProvisionerServer->find('count') > 0) {
+        $this->CoVomsProvisionerServer->deleteAll(array('CoVomsProvisionerServer.id is not null'), true);
+      }
+    } else {
+      $this->response->statusCode(501);
+    }
   }
 
   /**
@@ -188,6 +206,9 @@ class CoVomsProvisionerTargetsController extends SPTController {
 
     // View an existing CO Provisioning Target?
     $p['view'] = ($roles['cmadmin'] || $roles['coadmin']);
+
+    // fixme: find a way to make this clever. We need to identify the user before giving permission
+    $p['clearsrv'] = ($roles['cmadmin'] || $roles['coadmin']);
 
     $this->set('permissions', $p);
     return($p[$this->action]);

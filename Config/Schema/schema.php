@@ -30,8 +30,6 @@ class AppSchema extends CakeSchema
   public $co_voms_provisioner_targets = array(
     'id' => array('type' => 'integer', 'autoIncrement' => true, 'null' => false, 'default' => null, 'length' => 10, 'key' => 'primary'),
     'co_provisioning_target_id' => array('type' => 'integer', 'null' => false, 'length' => 10),
-    'host' => array('type' => 'string', 'null' => true, 'length' => 256),
-    'port' => array('type' => 'integer', 'null' => true, 'length' => 10),
     'vo' => array('type' => 'string', 'null' => true, 'length' => 96),
     'robot_cert' => array('type' => 'string', 'null' => true, 'length' => 6000),
     'robot_key' => array('type' => 'string', 'null' => true, 'length' => 6000),

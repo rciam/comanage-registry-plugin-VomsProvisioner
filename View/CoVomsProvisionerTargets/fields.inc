@@ -54,6 +54,9 @@ $this->Html->addCrumb($crumbTxt);
 print $this->Form->hidden('co_id', array('default' => $cur_co['Co']['id'])) . "\n";
 print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_ptid)) . "\n";
 
+// Variables i want accross the view
+$token_key = $this->request->params['_Token']['key'];
+
 // https://dirac.egi.eu/files/diracVOs.json
 // todo: Perhaps i could use this to configure the provisioner automagically
 
@@ -134,6 +137,11 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
     }
 
     $(function() {
+        // Hide clear if the Server list is empty
+        if($('.voms-server-list').length > 0) {
+            $('#voms-server-clr-btn').show();
+        }
+
         // Read the Robot Cert
         $('#robot_cert[type=file]').change((event) => {
             $('#cert-done').hide();
@@ -151,6 +159,39 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
             $("body").append(`<?php print $this->element('modal')?>`);
             $('#vomsAddModal').modal('show');
              // $('#myInput').focus();
+        });
+
+        $('#voms-server-clr-btn').on('click', () => {
+            var $srv_data = {
+                _Token: {}
+            };
+            $srv_data._Token.key = '<?php echo $token_key;?>';
+            var url_str = '<?php echo $this->Html->url(array(
+              'plugin' => Inflector::singularize(Inflector::tableize($this->plugin)),
+              'controller' => 'co_voms_provisioner_targets',
+              'action' => 'clearsrv',
+              'co'  => $cur_co['Co']['id'])); ?>';
+            $.ajax({
+                type: "POST",
+                url: url_str,
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+                    xhr.setRequestHeader('X-CSRF-Token', '<?php echo $token_key;?>');
+                },
+                cache:false,
+                data: $srv_data,
+                success: function(response) {
+                    // Remove from document
+                    $('.voms-server-list').remove();
+                    // Disable clear button
+                    $('#voms-server-clr-btn').hide();
+                    generateLinkFlash("<?php print _txt('rs.voms_provisioner.cleared') ?>","success", 2000);
+                },
+                error: function(response) {
+                    generateLinkFlash("<?php print _txt('rs.voms_provisioner.cleared.fail') ?>","error", 2000);
+                    console.log(response.responseText);
+                }
+            });
         });
     });
 </script>
@@ -211,6 +252,13 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
              class='ui-button ui-corner-all ui-widget'>
             <span class="ui-button-icon ui-icon ui-icon-circle-plus"></span><span class="ui-button-icon-space"> </span>
             <?php print _txt('fd.voms_provisioner.srv'); ?>
+          </a>
+          <a href="#"
+             style="display:none;"
+             id='voms-server-clr-btn'
+             class='ui-button ui-corner-all ui-widget'>
+            <span class="ui-button-icon ui-icon ui-icon-circle-close"></span><span class="ui-button-icon-space"> </span>
+            <?php print _txt('fd.voms_provisioner.clr'); ?>
           </a>
         </li>
       </ul>

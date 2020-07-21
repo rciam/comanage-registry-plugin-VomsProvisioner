@@ -39,9 +39,14 @@ $cm_voms_provisioner_texts['en_US'] = array(
   'pl.voms_provisioner.robot_key.desc'     => 'Key of VOMS robot user with administrator priviledges',
   'pl.voms_provisioner.info'               => 'Define the VOMs where you will push/sync the status of the associated Group/COU',
 
-  'fd.voms_provisioner.srv'                => 'Server',
+  'fd.voms_provisioner.srv'                => 'Add',
+  'fd.voms_provisioner.clr'                => 'Clear',
   'fd.voms_provisioner.srv_add'            => 'VOMs Server',
   'fd.voms_provisioner.add'                => 'Add',
+
+  // Database operations
+  'rs.voms_provisioner.cleared'            => 'Entries Removed',
+  'rs.voms_provisioner.cleared.fail'       => 'Clearing Entries Failed',
 
   // Operation messages
   'op.voms_provisioner.blackhauled'        => '%1$s Request Blackhauled(t:"%2$s")',
