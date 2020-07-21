@@ -78,8 +78,8 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     ),
     'vo' => array(
       'rule' => 'notBlank',
-      'required' => false,
-      'allowEmpty' => true
+      'required' => true,
+      'allowEmpty' => false
     ),
     'robot_cert' => array(
       'rule' => 'notBlank',
@@ -151,7 +151,9 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       $robot_cert = $this->getRobotCert($coProvisioningTargetData);
       $robot_key = $this->getRobotKey($coProvisioningTargetData);
       // Instantiate VOMS Client
-      $this->_voms_client = $this->getVomsClient($coProvisioningTargetData["CoVomsProvisionerTarget"]['host'],
+      // todo: fixme now that i changed the model
+      $this->_voms_client = $this->getVomsClient(
+        $coProvisioningTargetData["CoVomsProvisionerTarget"]['host'],
         $coProvisioningTargetData["CoVomsProvisionerTarget"]['port'],
         $coProvisioningTargetData["CoVomsProvisionerTarget"]['vo'],
         $robot_cert,

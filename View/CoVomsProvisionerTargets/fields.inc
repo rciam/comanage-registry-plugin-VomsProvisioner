@@ -51,8 +51,6 @@ $this->Html->addCrumb(_txt('ct.co_provisioning_targets.pl'), $args);
 $crumbTxt = _txt('op.' . $this->action . '-a', array(_txt('ct.co_voms_provisioner_targets.1')));
 $this->Html->addCrumb($crumbTxt);
 
-
-
 print $this->Form->hidden('co_id', array('default' => $cur_co['Co']['id'])) . "\n";
 print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_ptid)) . "\n";
 
@@ -62,6 +60,10 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
 ?>
 
 <script type="text/javascript">
+    // Global javascript variables
+    var vo_name = '<?php print $co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]["vo"];?>';
+    // fixme: remove hardcoded
+    var vo_name = 'eli-beams.eu';
 
     // todo: Investigate more on filereader. It would be better if we made this a promise
     function read_file(event, validation_string, input_textbox, file_type) {
@@ -133,10 +135,7 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
         $('#voms-server-add-btn').on('click', () => {
             // XXX Use ES6 template literal(Template Strings) to load the template
             $("body").append(`<?php print $this->element('modal')?>`);
-            $('#vomsAddModal').modal();
-            $('#vomsAddModal').animate({
-                scrollTop: 0
-            }, 'slow');
+            $('#vomsAddModal').modal('show');
              // $('#myInput').focus();
         });
     });
@@ -157,8 +156,10 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
     </div>
     <div class="field-info">
       <?php
-        if(isset($vv_cou_name)) {
+        if(!empty($vv_cou_name)) {
           print $vv_cou_name;
+        } elseif(!empty(filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]["vo"]))) {
+          print filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]["vo"]);
         } else {
           $options = array(
             'size'      => 50,
@@ -179,7 +180,7 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
       <div class="field-desc"><?php print _txt('pl.voms_provisioner.serveruri.desc'); ?></div>
     </div>
     <div class="field-info">
-      <ul style="padding-inline-start:unset;">
+      <ul id="co_voms_provisioner_servers_list" style="padding-inline-start:unset;">
         <?php foreach($co_voms_provisioner_targets[0]["CoVomsProvisionerServer"] as $server): ?>
         <?php
           $base_uri = 'https://' . filter_var($server['host']) . ':'

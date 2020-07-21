@@ -18,6 +18,7 @@ $cm_voms_provisioner_texts['en_US'] = array(
   'er.voms_provisioner.canonical'          => 'Could not determine co person canonical name',
   'er.voms_provisioner.nohst_prt'          => 'Host/Port missing',
   'er.voms_provisioner.ntfnd_api'          => 'Rest API URL could not be constructed',
+  'er.voms_provisioner.token.blackhauled'  => 'Token expired.Please try again.',
 
   // Plugin texts
   'pl.voms_provisioner.serveruri'          => 'Server URI',
