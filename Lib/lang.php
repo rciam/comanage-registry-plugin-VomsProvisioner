@@ -39,13 +39,16 @@ $cm_voms_provisioner_texts['en_US'] = array(
   'pl.voms_provisioner.robot_key.desc'     => 'Key of VOMS robot user with administrator priviledges',
   'pl.voms_provisioner.info'               => 'Define the VOMs where you will push/sync the status of the associated Group/COU',
 
-  'fd.voms_provisioner.srv'                => 'Add',
-  'fd.voms_provisioner.clr'                => 'Clear',
-  'fd.voms_provisioner.srv_add'            => 'VOMs Server',
-  'fd.voms_provisioner.add'                => 'Add',
+  'fd.voms_provisioner.srv'                 => 'Add',
+  'fd.voms_provisioner.clr'                 => 'Clear',
+  'fd.voms_provisioner.edit'                => 'Edit',
+  'fd.voms_provisioner.del'                 => 'Delete',
+  'fd.voms_provisioner.srv_add'             => 'VOMs Server',
+  'fd.voms_provisioner.add'                 => 'Add',
 
   // Database operations
   'rs.voms_provisioner.cleared'            => 'Entries Removed',
+  'rs.voms_provisioner.cleared.1'          => 'Entry Removed',
   'rs.voms_provisioner.cleared.fail'       => 'Clearing Entries Failed',
 
   // Operation messages
@@ -53,8 +56,10 @@ $cm_voms_provisioner_texts['en_US'] = array(
   'op.voms_provisioner.nogroup'            => 'No Group/VO configured',
   'op.voms_provisioner.nocert'             => 'No Valid certificate found',
   'op.voms_provisioner.srv_add_mode'       => 'Choose Server Import Mode:',
+  'op.voms_provisioner.noport'             => 'No Port provided',
+  'op.voms_provisioner.nohost'             => 'No Host provided',
 
   // Known VOMs error
-  'op.voms_provisioner.vo_existing_person'    => 'A user holding a certificate with the following subject %1$s already exists in this VO.',
+  'op.voms_provisioner.vo_existing_person' => 'A user holding a certificate with the following subject %1$s already exists in this VO.',
 
 );

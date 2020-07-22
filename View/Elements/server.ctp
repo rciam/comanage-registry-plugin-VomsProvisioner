@@ -1,5 +1,6 @@
 <?php
 ?>
+
 <div class="modal-body mode-toggler">
   <label><?php print _txt('op.voms_provisioner.srv_add_mode'); ?></label>
   <select id="mode-toggler"
@@ -34,7 +35,7 @@
       <small id="portHelp" class="form-text text-muted"><?php print _txt('pl.voms_provisioner.port.desc'); ?></small>
     </div>
     <div class="form-group">
-      <input type="text" class="form-control" id="dn" aria-describedby="dnHelp" placeholder="<?php print _txt('pl.voms_provisioner.dn'); ?>">
+      <input type="text" class="form-control" id="dn" aria-describedby="dnHelp" placeholder="<?php print _txt('pl.voms_provisioner.dn'); ?>" value="">
       <small id="dnHelp" class="form-text text-muted"><?php print _txt('pl.voms_provisioner.dn.desc'); ?></small>
     </div>
   </div>
