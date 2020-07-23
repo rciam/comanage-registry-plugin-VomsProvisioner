@@ -40,8 +40,11 @@
     </div>
   </div>
   <div class="modal-footer border-top-0 d-flex justify-content-center">
-    <button type="submit"
-            onclick="requestMode()"
-            class="spin submit-button mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect"><?php print _txt('fd.voms_provisioner.add'); ?></button>
+    <a href="#"
+       id='voms-server-delete'
+       onclick="requestMode()"
+       style="text-decoration: none;"
+       class="spin submit-button mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect"><?php print _txt('fd.voms_provisioner.add'); ?>
+    </a>
   </div>
 </form>

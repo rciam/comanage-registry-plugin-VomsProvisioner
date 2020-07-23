@@ -38,7 +38,6 @@ function bulkVomsGet(url) {
         });
 }
 
-
 // Load and parse the data from the JSON endpoint
 // Then append li and input elements in the body of the edit view
 function parseJsonVoms(data) {

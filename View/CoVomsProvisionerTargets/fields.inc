@@ -64,7 +64,7 @@ $token_key = $this->request->params['_Token']['key'];
 
 <script type="text/javascript">
     // Global javascript variables
-    var vo_name = '<?php print $co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]["vo"];?>';
+    var vo_name = '<?php print trim(filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]["vo"]));?>';
 
     // todo: Investigate more on filereader. It would be better if we made this a promise
     // todo: move on separate file
@@ -151,8 +151,9 @@ $token_key = $this->request->params['_Token']['key'];
             }
             let dn = $('.single-mode').find('#dn').val().trim();
             // Get the id of the provisioner target
-            action_tbl = $('#CoVomsProvisionerTargetEditForm').attr('action').split('/');
-            let cvpt_id = action_tbl[action_tbl.length - 1];
+            action_tbl = $('#CoVomsProvisionerTargetEditForm').attr('action').split('edit');
+            params = action_tbl[action_tbl.length-1].split('/');
+            let cvpt_id = params[1];
             // Get the index
             addSingle(cvpt_id, host, port, dn);
             $('#vomsAddModal').modal('hide');
@@ -295,10 +296,10 @@ $token_key = $this->request->params['_Token']['key'];
       <?php
         if(!empty($vv_cou_name)) {
           print $vv_cou_name;
-          print $this->Form->hidden('vo', array('default' => $vv_cou_name . "\n"));
+          print $this->Form->hidden('vo', array('default' => trim($vv_cou_name )));
       } elseif(!empty(filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]["vo"]))) {
           print filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]["vo"]);
-          print $this->Form->hidden('vo', array('default' => filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]["vo"]) . "\n"));
+          print $this->Form->hidden('vo', array('default' => filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]["vo"])));
         } else {
           $options = array(
             'size'      => 50,

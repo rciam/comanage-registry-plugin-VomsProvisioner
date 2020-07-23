@@ -97,6 +97,9 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     $this->log(__METHOD__ . "::@", LOG_DEBUG);
     $this->log(__METHOD__ . "::action => ".$op, LOG_DEBUG);
 
+    // Get all the linked tables of my Provisioner
+    $coProvisioningTargetData = $this->getFullStructure($coProvisioningTargetData["CoVomsProvisionerTarget"]["id"]);
+
     // First figure out what to do
     $voremove = false;
     $voadd =false;
@@ -140,8 +143,8 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       // Instantiate VOMS Client
       // todo: fixme now that i changed the model
       $this->_voms_client = $this->getVomsClient(
-        $coProvisioningTargetData["CoVomsProvisionerTarget"]['host'],
-        $coProvisioningTargetData["CoVomsProvisionerTarget"]['port'],
+        $coProvisioningTargetData["CoVomsProvisionerServer"][0]["host"],
+        $coProvisioningTargetData["CoVomsProvisionerServer"][0]["port"],
         $coProvisioningTargetData["CoVomsProvisionerTarget"]['vo'],
         $robot_cert,
         $robot_key);
@@ -193,8 +196,9 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
    */
   protected function retrieveUserCouRelatedStatus($provisioningData, $coProvisioningTargetData) {
     $this->log(__METHOD__ . "::@", LOG_DEBUG);
-    if(empty($coProvisioningTargetData["CoVomsProvisionerTarget"]['host'])
-       || empty($coProvisioningTargetData["CoVomsProvisionerTarget"]['port'])){
+    // fixme: This should be changed now that i have more than one VOMS
+    if(empty($coProvisioningTargetData["CoVomsProvisionerServer"][0]["host"])
+       || empty($coProvisioningTargetData["CoVomsProvisionerServer"][0]["port"])){
       throw new InvalidArgumentException(_txt('er.notfound',
         array(_txt('ct.co_voms_provisioner_targets.1'), _txt('er.voms_provisioner.nohst_prt'))));
     }
@@ -406,4 +410,15 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     }
   }
 
+  /**
+   * @param integer $id  The $id of the Provisioner's entry in the table
+   * @return array|null  Provsioner's (linked) data
+   */
+  public function getFullStructure($id) {
+    $args = array();
+    $args['conditions']['CoVomsProvisionerTarget.id'] = $id;
+    $args['contains'] = array('CoVomsProvisionerTargetServer');
+    $data = $this->find('first', $args);
+    return $data;
+  }
 }

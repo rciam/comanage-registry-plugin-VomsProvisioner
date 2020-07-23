@@ -30,11 +30,11 @@ class CoVomsProvisionerServersController extends StandardController
 
   public function delete($id) {
     $this->log(__METHOD__ . "::@", LOG_DEBUG);
-    $this->autoRender = false; // We don't render a view in this example
-    $this->request->onlyAllow('ajax'); // No direct access via browser URL
-    $id = !empty($id) ? $id : $this->request->data['id'];
 
     if( $this->request->is('ajax') && $this->request->is('delete') ) {
+      $this->autoRender = false; // We don't render a view in this example
+      $this->request->onlyAllow('ajax'); // No direct access via browser URL
+      $id = !empty($id) ? $id : $this->request->data['id'];
       if( $this->CoVomsProvisionerServer->delete($id)) {
         $resp_data = array(
           'id' => $id,
@@ -53,6 +53,8 @@ class CoVomsProvisionerServersController extends StandardController
         return $this->response;
       }
     }
+    // Is this is not an AJAX Request let the parent handled it
+    parent::delete($id);
   }
 
 

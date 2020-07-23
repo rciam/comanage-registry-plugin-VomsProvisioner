@@ -49,7 +49,6 @@ class CoVomsProvisionerTargetsController extends SPTController {
       'csrfExpires' => '+10 minutes'
     ));
 
-
   // Create notification pop up after saving
 
   /**
