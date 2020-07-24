@@ -81,18 +81,24 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
                 let description_text = description.html().split('-')[0].trim();
                 description.html(description_text);
             }else{
-                let li = input_textbox.closest('li');
-                let description = li.find('.field-desc');
-                let description_text = description.html().split('-')[0].trim();
-                description_text = description_text + "<span style='color:red'>  - Wrong File Input</span>";
-                description.html(description_text);
+                //let li = input_textbox.closest('li');
+                //let description = li.find('.field-desc');
+                //let description_text = description.html().split('-')[0].trim();
+                //description_text = description_text + "<span style='color:red'>  - Wrong File Input</span>";
+                //description.html(description_text);
+                $('.' + file_type + '-status-container').css('display', 'inline-block');
+                $('.' + file_type + '-status-container').html('<span style="color:red"><em class="material-icons upload-error">error</em> Wrong File Format</span>');
+                $('.' + file_type + '-status-container .upload-error').show();           
                 return;
             }
             //Encode to base64
             let result = $.base64.encode(payload);
             // Add base64 encoded value in the textbox
             input_textbox.val(result);
-            $('#' + file_type + '-done').show();
+            console.log(file_type)
+            $('.' + file_type + '-status-container').css('display', 'inline-block');
+            $('.' + file_type + '-status-container').html('<span style="color:green"><em id="tick" class="material-icons upload-done">done</em> File uploaded</span>');
+            $('.' + file_type + '-status-container .upload-done').show();           
         }
         fileReader.onprogress = (event) => {
             progress_element = $('#'+file_type + '-progress');
@@ -109,11 +115,15 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
             }
         }
         fileReader.onerror = (event) => {
-            let li = input_textbox.closest('li');
-            let description = li.find('.field-desc');
-            let description_text = description.html().split('-')[0].trim();
-            description_text = description_text + "<span style='color:red'>  - Load File failed</span>";
-            description.html(description_text);
+            //let li = input_textbox.closest('li');
+            //let description = li.find('.field-desc');
+            //let description_text = description.html().split('-')[0].trim();
+            //description_text = description_text + "<span style='color:red'>  - Load File failed</span>";
+            //description.html(description_text);
+            $('.' + file_type + '-status-container').css('display', 'inline-block');
+            $('.' + file_type + '-status-container').html('<span style="color:red"><em class="material-icons upload-error">error</em> Wrong File Format</span>');
+            $('.' + file_type + '-status-container .upload-error').show();           
+            
         }
         fileReader.readAsText(file);
     }
@@ -123,7 +133,6 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
             $('#cert-done').hide();
             read_file(event, 'BEGIN CERTIFICATE', $('#CoVomsProvisionerTargetRobotCert'), 'cert');
         });
-
         // Read the Robot Key
         $('#robot_key[type=file]').change((event) => {
             $('#key-done').hide();
@@ -215,16 +224,31 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
       <div class="field-desc"><?php print _txt('pl.voms_provisioner.robot_cert.desc'); ?></div>
     </div>
     <div class="field-info">
-      <label for="robot_cert" class="loadbutton ui-button ui-corner-all ui-widget"">
-        <span class="ui-button-icon ui-icon ui-icon-transferthick-e-w"></span><span class="ui-button-icon-space"> </span>
+      <?php 
+      $button_label = 'Load';
+      $status = '';
+      $status_desc = '';
+      if(!empty($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_cert'])){
+        $status_desc = 'File exists';
+        $button_label = 'Update';
+        $status = 'uploaded';
+      }
+      ?>
+      <label for="robot_cert" class="loadbutton ui-button ui-corner-all ui-widget">
+        <span class="ui-button-icon ui-icon ui-icon-transferthick-e-w"></span>
         <input type="file" id="robot_cert" accept="application/x-x509-ca-cert, .pem" style="display: none"/>
-        Load
+        <?php print $button_label; ?>
       </label>
       <div id="cert-progress" class="progress volume-slider">
         <div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
       </div>
       <?php print $this->Form->hidden('robot_cert', array('default' => $co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_cert'])) . "\n";?>
-      <em id="cert-done" class="material-icons upload-done">done</em>
+      <div class="cert-status-container">
+        <span style="color:blue">
+          <em id="cert-<?php print $status; ?>" class="material-icons upload-done cert-<?php print $status; ?>">done</em>
+          <?php print $status_desc; ?>
+        </span>
+      </div>
     </div>
   </li>
   <li>
@@ -236,16 +260,31 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
       <div class="field-desc"><?php print _txt('pl.voms_provisioner.robot_key.desc'); ?></div>
     </div>
     <div class="field-info">
-      <label for="robot_key"  class="loadbutton ui-button ui-corner-all ui-widget"">
-        <span class="ui-button-icon ui-icon ui-icon-transferthick-e-w"></span><span class="ui-button-icon-space"> </span>
+    <?php       
+      $button_label = 'Load';
+      $status = '';
+      $status_desc = '';
+      if(!empty($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_key'])){
+        $status_desc = 'File exists';
+        $button_label = 'Update';
+        $status = 'uploaded';
+      }
+      ?>
+      <label for="robot_key"  class="loadbutton ui-button ui-corner-all ui-widget">
+        <span class="ui-button-icon ui-icon ui-icon-transferthick-e-w"></span>
         <input type="file" id="robot_key" accept="application/x-x509-ca-cert, .pem" style="display: none"/>
-        Load
+        <?php print $button_label; ?>
       </label>
       <div id="key-progress" class="progress volume-slider">
         <div class="progress-bar" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
       </div>
       <?php print $this->Form->hidden('robot_key', array('default' => $co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_key'])) . "\n";?>
-      <em id="key-done" class="material-icons upload-done">done</em>
+      <div class="key-status-container">
+        <span style="color:blue">
+          <em id="key-<?php print $status;?>" class="material-icons upload-done key-<?php print $status;?>">done</em>
+          <?php print $status_desc; ?>
+        </span>
+      </div>
     </div>
   </li>
   <?php if($e): ?>

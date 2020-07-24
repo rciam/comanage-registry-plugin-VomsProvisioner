@@ -25,6 +25,25 @@
   display: none;
 }
 
+.upload-error {
+  font-size: 19px!important;
+}
+
+.cert-status-container, .key-status-container {
+  display: inline-block;
+}
+.cert-uploaded, .key-uploaded {
+  background: blue;
+  display: inline-block;
+  position: relative;
+  top:-3px;
+}
+
+#tick {
+  position: relative;
+  top:-3px;
+}
+
 .voms-server-list,
 .voms-server-list-btn {
   background: inherit !important;
