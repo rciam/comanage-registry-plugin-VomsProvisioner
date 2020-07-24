@@ -27,7 +27,7 @@ alter table cm_co_voms_provisioner_targets add column port integer;
 
 Phase two
 ```sql
-alter table cm_co_voms_provisioner_targets drop column vo;
+alter table cm_co_voms_provisioner_targets drop column port;
 alter table cm_co_voms_provisioner_targets drop column host;
 
 CREATE TABLE cm_co_voms_provisioner_servers
