@@ -155,8 +155,10 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     // XXX Now perform an action
 
     // The CO Person is not part of the COU
-    if(empty($user_cou_related_profile["CoPersonRole"])
-       && ($modify || $voremove)) {
+    if((empty($user_cou_related_profile["CoPersonRole"])
+        && ($modify || $voremove))
+            || ( !empty($user_cou_related_profile["CoPersonRole"])
+                  && $user_cou_related_profile["CoPersonRole"][0]["status"] === StatusEnum::Expired)) {
       // fixme: How to do i know the $dn and $ca that the user used to register
       $response = $this->_voms_client->deleteUser($user_cou_related_profile['Cert'][0]['Cert']['subject'],
                                                   $user_cou_related_profile['Cert'][0]['Cert']['issuer']);
@@ -169,10 +171,8 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
 
     // The user is in the COU
     if(!empty($user_cou_related_profile["CoPersonRole"])) {
-      if($modify
-         && ($user_cou_related_profile["CoPersonRole"][0]["status"] === StatusEnum::Expired
-             || $user_cou_related_profile["CoPersonRole"][0]["status"] === StatusEnum::Suspended)) {
-          // XXX I will translate this as suspended
+      if($modify && $user_cou_related_profile["CoPersonRole"][0]["status"] === StatusEnum::Suspended) {
+          // XXX I will translate this as suspended action
           return true;
       }
       // XXX add user into VOMS

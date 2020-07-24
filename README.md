@@ -14,6 +14,7 @@ VOMS admin Client
 - Remove all references of the Vo Model in around the project
 - Remove all configured instances of the plugin
 - Alter the table in the database
+
 Phase I
 ```sql
 alter table cm_co_voms_provisioner_targets rename column server_url to host;
