@@ -33,7 +33,7 @@ class VomsClient {
    * @return object GuzzleHttp\Client VomsRestClient
    */
   private function restClient() {
-    if ($this->rest_client === null) {
+    if($this->rest_client === null) {
       $this->rest_client = new VomsRestClient(...$this->_config);
     }
     return $this->rest_client;
@@ -44,7 +44,7 @@ class VomsClient {
    * @return object GuzzleHttp\Client VomsSoaptClient
    */
   private function soapClient() {
-    if ($this->soap_client === null) {
+    if($this->soap_client === null) {
       $this->soap_client = new VomsSoapClient(...$this->_config);
     }
     return $this->soap_client;
@@ -70,10 +70,10 @@ class VomsClient {
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function createUser($user_data) {
-    if (empty($user_data)) {
+    if(empty($user_data)) {
       return null;
     }
-    if (empty($user_data['user'])) {
+    if(empty($user_data['user'])) {
       // todo: Use the soap client
     }
     return $this->restClient()->vomsRequest(VomsRestActionsEnum::CREATE_USER, $user_data);
@@ -86,7 +86,7 @@ class VomsClient {
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function deleteUser($dn, $ca) {
-    if (empty($dn) || empty($ca)) {
+    if(empty($dn) || empty($ca)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
@@ -103,7 +103,7 @@ class VomsClient {
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function getUser($dn, $ca) {
-    if (empty($dn) || empty($ca)) {
+    if(empty($dn) || empty($ca)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
@@ -119,7 +119,7 @@ class VomsClient {
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function createRole($roleName) {
-    if (empty($roleName)) {
+    if(empty($roleName)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
@@ -137,7 +137,7 @@ class VomsClient {
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function assignRole($groupName, $roleName, $dn, $ca) {
-    if (empty($groupName) || empty($roleName) || empty($dn) || empty($ca)) {
+    if(empty($groupName) || empty($roleName) || empty($dn) || empty($ca)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
@@ -158,7 +158,7 @@ class VomsClient {
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function dismissRole($groupName, $roleName, $dn, $ca) {
-    if (empty($groupName) || empty($roleName) || empty($dn) || empty($ca)) {
+    if(empty($groupName) || empty($roleName) || empty($dn) || empty($ca)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
@@ -177,7 +177,7 @@ class VomsClient {
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function getCertificates($dn, $ca) {
-    if (empty($dn) || empty($ca)) {
+    if(empty($dn) || empty($ca)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
@@ -196,7 +196,7 @@ class VomsClient {
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function addCertificate($regdn, $regca, $dn, $ca) {
-    if (empty($regdn) || empty($regca) || empty($dn) || empty($ca)) {
+    if(empty($regdn) || empty($regca) || empty($dn) || empty($ca)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
@@ -216,7 +216,7 @@ class VomsClient {
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function suspendCertificate($dn, $ca, $reason) {
-    if (empty($reason) || empty($dn) || empty($ca)) {
+    if(empty($reason) || empty($dn) || empty($ca)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
@@ -234,7 +234,7 @@ class VomsClient {
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function removeCertificate($dn, $ca) {
-    if (empty($dn) || empty($ca)) {
+    if(empty($dn) || empty($ca)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
@@ -251,7 +251,7 @@ class VomsClient {
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function restoreCertificate($dn, $ca) {
-    if (empty($dn) || empty($ca)) {
+    if(empty($dn) || empty($ca)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
@@ -269,7 +269,7 @@ class VomsClient {
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function createAttributeClass($name, $description, $unique) {
-    if (empty($name) || empty($description) || empty($unique)) {
+    if(empty($name) || empty($description) || empty($unique)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
@@ -295,7 +295,7 @@ class VomsClient {
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function deleteAttributeClass($name) {
-    if (empty($name)) {
+    if(empty($name)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
 
@@ -314,7 +314,7 @@ class VomsClient {
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function setUserAttribute($dn, $ca, $name, $value) {
-    if (empty($dn) || empty($ca) || empty($name) || empty($value)) {
+    if(empty($dn) || empty($ca) || empty($name) || empty($value)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
@@ -334,7 +334,7 @@ class VomsClient {
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function deleteUserAttribute($dn, $ca, $name) {
-    if (empty($dn) || empty($ca) || empty($name)) {
+    if(empty($dn) || empty($ca) || empty($name)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
@@ -352,7 +352,7 @@ class VomsClient {
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function listUserAttributes($dn, $ca) {
-    if (empty($dn) || empty($ca)) {
+    if(empty($dn) || empty($ca)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
@@ -368,7 +368,7 @@ class VomsClient {
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function createGroup($groupName) {
-    if (empty($groupName)) {
+    if(empty($groupName)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
@@ -383,7 +383,7 @@ class VomsClient {
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function deleteGroup($groupName) {
-    if (empty($groupName)) {
+    if(empty($groupName)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
@@ -400,7 +400,7 @@ class VomsClient {
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function addMember($groupName, $dn, $ca) {
-    if (empty($groupName) || empty($dn) || empty($ca)) {
+    if(empty($groupName) || empty($dn) || empty($ca)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
@@ -419,7 +419,7 @@ class VomsClient {
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function removeMember($groupName, $dn, $ca) {
-    if (empty($groupName) || empty($dn) || empty($ca)) {
+    if(empty($groupName) || empty($dn) || empty($ca)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
@@ -436,7 +436,7 @@ class VomsClient {
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function listMembers($groupName) {
-    if (empty($groupName)) {
+    if(empty($groupName)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
@@ -452,7 +452,7 @@ class VomsClient {
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function listUserGroups($dn, $ca) {
-    if (empty($dn) || empty($ca)) {
+    if(empty($dn) || empty($ca)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
@@ -478,7 +478,7 @@ class VomsClient {
    * @return void
    */
   public function suspendUser($dn, $ca, $reason) {
-    if (empty($dn) || empty($ca) || empty($reason)) {
+    if(empty($dn) || empty($ca) || empty($reason)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [

@@ -35,10 +35,10 @@ abstract class VomsHttp {
    *  Close the ssl_key and ssl_cert temporary files if still open
    */
   public function __destruct() {
-    if (!is_null($this->_fcert_robot)) {
+    if(!is_null($this->_fcert_robot)) {
       fclose($this->_fcert_robot);
     }
-    if (!is_null($this->_fkey_robot)) {
+    if(!is_null($this->_fkey_robot)) {
       fclose($this->_fkey_robot);
     }
   }
@@ -65,7 +65,7 @@ abstract class VomsHttp {
    * @todo generalize the construction of the endpoint
    */
   protected function baseUri() {
-    if (is_null($this->host) || is_null($this->port) || is_null($this->vo_name)) {
+    if(is_null($this->host) || is_null($this->port) || is_null($this->vo_name)) {
       return null;
     }
     return 'https://' . $this->host . ':' . $this->port;
@@ -75,10 +75,10 @@ abstract class VomsHttp {
    * @return Object GuzzleHttp\Client | null
    */
   protected function httpClient() {
-    if (is_null($this->baseUri())) {
+    if(is_null($this->baseUri())) {
       return null;
     }
-    if (is_null($this->_http_client)) {
+    if(is_null($this->_http_client)) {
       $this->_http_client = new GuzzleHttp\Client($this->getDefaults());
     }
     return $this->_http_client;

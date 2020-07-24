@@ -20,7 +20,7 @@ class VomsSoapClient extends VomsHttp {
     $http_headers = [
       'X-VOMS-CSRF-GUARD' => '',
     ];
-    if ($content) {
+    if($content) {
       // Create HttpHeaders
       $http_headers['Content-Type'] = 'text/xml;charset="utf-8"';
       $http_headers['Accept'] = 'text/xml';
@@ -49,7 +49,7 @@ class VomsSoapClient extends VomsHttp {
     $fname = $action . '_payload';
     try {
       $this->$fname($soapEnvelopeAction, $parameters);
-    } catch (Exception $e) {
+    } catch(Exception $e) {
       $this->Flash->set($e->getMessage(), array('key' => 'error'));
     }
     return $soapEnvelope->asXML();
@@ -399,7 +399,7 @@ class VomsSoapClient extends VomsHttp {
         'debug' => $debug,
         'headers' => $this->constructHeaders(!empty($post_fields)),
       ];
-      if (!empty($post_fields)) {
+      if(!empty($post_fields)) {
         $options['body'] = $this->constructEnvelope($action, $post_fields);
       }
       $response = $client->request(
@@ -411,7 +411,7 @@ class VomsSoapClient extends VomsHttp {
         'status_code' => $response->getStatusCode(),
         'msg' => $response->getReasonPhrase(),
       ];
-    } catch (Exception $e) {
+    } catch(Exception $e) {
       return [
         'status_code' => $e->getCode(),
         'msg' => $e->getMessage(),

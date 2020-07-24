@@ -16,7 +16,7 @@ class VomsRestClient extends VomsHttp {
   protected function constructHeaders($content = false) {
     // Create HttpHeaders
     $http_headers = ['X-VOMS-CSRF-GUARD' => ''];
-    if ($content) {
+    if($content) {
       $http_headers['Content-Type'] = 'application/json; charset=utf-8';
       $http_headers['Accept'] = 'application/json';
     }
@@ -37,7 +37,7 @@ class VomsRestClient extends VomsHttp {
         'debug' => $debug,
         'headers' => $this->constructHeaders(!empty($post_fields)),
       ];
-      if (!empty($post_fields)) {
+      if(!empty($post_fields)) {
         $options['json'] = $post_fields;
       }
       $response = $client->request('POST', $this->getReqLocation() . '/' . $action, $options);
@@ -45,7 +45,7 @@ class VomsRestClient extends VomsHttp {
         'status_code' => $response->getStatusCode(),
         'msg' => $response->getReasonPhrase(),
       ];
-    } catch (Exception $e) {
+    } catch(Exception $e) {
       return [
         'status_code' => $e->getCode(),
         'msg' => $e->getMessage(),

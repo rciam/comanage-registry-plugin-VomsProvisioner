@@ -1,7 +1,6 @@
 <?php
 
-class VomsRestActionsEnum
-{
+class VomsRestActionsEnum {
   const CREATE_USER = 'create-user.action';
   const GET_EXPIRED_USERS = 'expired-users.action';
   const GET_SUSPENDED_USERS = 'suspended-users.action';
@@ -42,9 +41,9 @@ class VomsSoapServicesEnum {
 
 class VomsSoapNamespaceEnum {
   const VOMS_ADMIN_NAMESPACE = 'http://glite.org/wsdl/services/org.glite.security.voms.service.admin';
-  const VOMS_CERTIFICATES_NAMESPACE= 'http://glite.org/wsdl/services/org.glite.security.voms.service.certificates';
-  const VOMS_ATTRIBUTES_NAMESPACE= 'http://glite.org/wsdl/services/org.glite.security.voms.service.attributes';
-  const mapToServices = array (
+  const VOMS_CERTIFICATES_NAMESPACE = 'http://glite.org/wsdl/services/org.glite.security.voms.service.certificates';
+  const VOMS_ATTRIBUTES_NAMESPACE = 'http://glite.org/wsdl/services/org.glite.security.voms.service.attributes';
+  const mapToServices = array(
     VomsSoapActionsEnum::ADD_CERTIFICATE => VomsSoapNamespaceEnum::VOMS_CERTIFICATES_NAMESPACE,
     VomsSoapActionsEnum::GET_CERTIFICATES => VomsSoapNamespaceEnum::VOMS_CERTIFICATES_NAMESPACE,
     VomsSoapActionsEnum::SUSPEND_CERTIFICATE => VomsSoapNamespaceEnum::VOMS_CERTIFICATES_NAMESPACE,
@@ -97,7 +96,7 @@ class VomsSoapActionsEnum {
   const SET_USER_ATTRIBUTE = 'setUserAttribute';
   const DELETE_USER_ATTRIBUTE = 'deleteUserAttribute';
   const LIST_USER_ATTRIBUTES = 'listUserAttributes';
-  const mapToServices = array (
+  const mapToServices = array(
     VomsSoapActionsEnum::ADD_CERTIFICATE => VomsSoapServicesEnum::VOMS_CERTIFICATES,
     VomsSoapActionsEnum::GET_CERTIFICATES => VomsSoapServicesEnum::VOMS_CERTIFICATES,
     VomsSoapActionsEnum::SUSPEND_CERTIFICATE => VomsSoapServicesEnum::VOMS_CERTIFICATES,

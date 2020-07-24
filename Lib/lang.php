@@ -1,5 +1,5 @@
 <?php
-  
+
 global $cm_lang, $cm_texts;
 
 // When localizing, the number in format specifications (eg: %1$s) indicates the argument
@@ -39,12 +39,12 @@ $cm_voms_provisioner_texts['en_US'] = array(
   'pl.voms_provisioner.robot_key.desc'     => 'Key of VOMS robot user with administrator priviledges',
   'pl.voms_provisioner.info'               => 'Define the VOMs where you will push/sync the status of the associated Group/COU',
 
-  'fd.voms_provisioner.srv'                 => 'Add',
-  'fd.voms_provisioner.clr'                 => 'Clear',
-  'fd.voms_provisioner.edit'                => 'Edit',
-  'fd.voms_provisioner.del'                 => 'Delete',
-  'fd.voms_provisioner.srv_add'             => 'VOMs Server',
-  'fd.voms_provisioner.add'                 => 'Add',
+  'fd.voms_provisioner.srv'                => 'Add',
+  'fd.voms_provisioner.clr'                => 'Clear',
+  'fd.voms_provisioner.edit'               => 'Edit',
+  'fd.voms_provisioner.del'                => 'Delete',
+  'fd.voms_provisioner.srv_add'            => 'VOMs Server',
+  'fd.voms_provisioner.add'                => 'Add',
 
   // Database operations
   'rs.voms_provisioner.cleared'            => 'Entries Removed',
