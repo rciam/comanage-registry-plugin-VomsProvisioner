@@ -29,7 +29,6 @@ Phase two
 ```sql
 alter table cm_co_voms_provisioner_targets drop column vo;
 alter table cm_co_voms_provisioner_targets drop column host;
-alter table cm_co_voms_provisioner_targets drop constraint ;
 
 CREATE TABLE cm_co_voms_provisioner_servers
 (
