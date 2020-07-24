@@ -14,6 +14,7 @@ VOMS admin Client
 - Remove all references of the Vo Model in around the project
 - Remove all configured instances of the plugin
 - Alter the table in the database
+Phase I
 ```sql
 alter table cm_co_voms_provisioner_targets rename column server_url to host;
 alter table cm_co_voms_provisioner_targets alter column host type varchar(256);
@@ -25,11 +26,12 @@ alter table cm_co_voms_provisioner_targets add column robot_key text;
 alter table cm_co_voms_provisioner_targets add column port integer;
 ```
 
-Phase two
+Phase II
 ```sql
 alter table cm_co_voms_provisioner_targets drop column port;
 alter table cm_co_voms_provisioner_targets drop column host;
 
+-- COManage must be able to read and write on the cm_co_voms_provisioner_servers table 
 CREATE TABLE cm_co_voms_provisioner_servers
 (
     id                            serial PRIMARY KEY,
