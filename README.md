@@ -24,3 +24,26 @@ alter table cm_co_voms_provisioner_targets alter column robot_cert type text;
 alter table cm_co_voms_provisioner_targets add column robot_key text;
 alter table cm_co_voms_provisioner_targets add column port integer;
 ```
+
+Phase two
+```sql
+alter table cm_co_voms_provisioner_targets drop column vo;
+alter table cm_co_voms_provisioner_targets drop column host;
+alter table cm_co_voms_provisioner_targets drop constraint ;
+
+CREATE TABLE cm_co_voms_provisioner_servers
+(
+    id                            serial PRIMARY KEY,
+    co_voms_provisioner_target_id integer NOT NULL,
+    host                          varchar(256),
+    port                          integer,
+    dn                            varchar(256),
+    created                       timestamp without time zone,
+    modified                      timestamp without time zone
+);
+
+-- Add Foreign Key constraints
+ALTER TABLE ONLY public.cm_co_voms_provisioner_servers
+    ADD CONSTRAINT cm_co_voms_provisioner_servers_co_voms_provisioner_target_id_fkey FOREIGN KEY (co_voms_provisioner_target_id) REFERENCES public.cm_co_voms_provisioner_targets (id);
+
+```
