@@ -30,10 +30,19 @@
   color: white;
   display: inline-block;
   text-align: center;
-  padding: 0.2rem 0.3rem 0.2rem 0.3rem;
+  padding: 0.05rem 0.3rem 0.1rem 0.3rem;
   text-decoration: unset;
+  height: 1.5rem;
   font-weight: bold;
   vertical-align: middle !important;
+}
+
+.info-box .material-icons {
+  margin-top: 0.05rem !important;
+}
+
+.info-box .material-icons:hover {
+  cursor: pointer;
 }
 
 .neutral {

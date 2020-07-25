@@ -20,7 +20,7 @@ function read_file(event, validation_string, input_textbox, file_type) {
             let li = input_textbox.closest('li');
             let description = li.find('.field-desc');
             let description_text = description.html().split('<span')[0].trim();
-            description_text = description_text.trim() + ' <span class="info-box success">File Loaded</span>';
+            description_text = description_text.trim() + ' <span class="info-box success"><i class="material-icons">info</i>File Loaded</span>';
             description.html(description_text);
         }else{
             let li = input_textbox.closest('li');

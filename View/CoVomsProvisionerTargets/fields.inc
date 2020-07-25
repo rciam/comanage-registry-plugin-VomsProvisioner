@@ -116,7 +116,13 @@ $token_key = $this->request->params['_Token']['key'];
 
     // Remove a single entry
     function removeSrv(element) {
-        let voms_row_id = $(element).closest('li').prevUntil('li').last().val();
+        let voms_row_id = -1;
+         $(element).closest('li').prevUntil('li').each((item, value) => {
+            let id = $(value).attr('id');
+            if(id.includes('CoVomsProvisionerServer') && id.includes('Id') && !id.includes('CoVomsProvisionerTargetId')) {
+                voms_row_id = $(value).val();
+            }
+        });
         let voms_data = {
             _Token: {}
         };
@@ -138,7 +144,6 @@ $token_key = $this->request->params['_Token']['key'];
             data: voms_data,
             success: function(response) {
                 // Remove the row and the hidden inputs
-                debugger;
                 let voms_row_html = $(element).closest('li');
                 let voms_row_hidden = $(element).closest('li').prevUntil('li');
                 $(voms_row_html).remove();
@@ -298,7 +303,10 @@ $token_key = $this->request->params['_Token']['key'];
       </div>
       <div class="field-desc"><?php print _txt('pl.voms_provisioner.robot_cert.desc'); ?>
         <?php if(!empty($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_cert'])): ?>
-          <span class="info-box neutral"><?php print _txt('fd.voms_provisioner.floaded'); ?></span>
+          <span class="info-box neutral">
+            <i class="material-icons">info</i>
+            <?php print _txt('fd.voms_provisioner.floaded'); ?>
+          </span>
         <?php endif; ?>
       </div>
     </div>
@@ -327,7 +335,10 @@ $token_key = $this->request->params['_Token']['key'];
       </div>
       <div class="field-desc"><?php print _txt('pl.voms_provisioner.robot_key.desc'); ?>
         <?php if(!empty($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_key'])): ?>
-          <span class="info-box neutral"><?php print _txt('fd.voms_provisioner.floaded'); ?></span>
+          <span class="info-box neutral">
+            <i class="material-icons">info</i>
+            <?php print _txt('fd.voms_provisioner.floaded'); ?>
+          </span>
         <?php endif; ?>
       </div>
     </div>
