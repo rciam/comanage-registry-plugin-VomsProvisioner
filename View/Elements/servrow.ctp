@@ -16,6 +16,9 @@
     <span class="ui-button-icon ui-icon ui-icon-closethick"></span>
   </a>
   <?php print $base_uri;?>
+  <em id="server-alive" class="material-icons status-icon success">done</em>
+  <em id="server-error" class="material-icons status-icon failed">close</em>
+  <em id="server-neutral" class="material-icons status-icon neutral"></em>
 </li>
 <?php else: ?>
   <a href="#"

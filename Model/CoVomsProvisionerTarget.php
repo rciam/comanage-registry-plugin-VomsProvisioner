@@ -126,6 +126,18 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
         break;
     }
 
+    // Return since no flag is on
+    if(!$modify && !$voremove && !$voadd){
+      return true;
+    }
+
+    // Get first VOMS Alive
+    $this->_voms_client = $this->getFirstVomsAlive($coProvisioningTargetData, $coProvisioningTargetData["CoVomsProvisionerServer"]);
+    if(is_null($this->_voms_client)) {
+      // todo: Perhaps return an error here somewhere
+      return true;
+    }
+    // Construct the CO Person's profile
     $user_cou_related_profile = $this->retrieveUserCouRelatedStatus($provisioningData, $coProvisioningTargetData);
 
     // XXX In order to perform any action we need at least on valid certificate. If none is provided then
@@ -133,23 +145,6 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     if(empty($user_cou_related_profile['Cert'])) {
       // fixme: Even though i am throwing an exception this is not working
       throw new RuntimeException(_txt('op.voms_provisioner.nocert'));
-    }
-
-    //XXX Get an instance to the Rest and Soap Clients
-    if($modify || $voremove || $voadd){
-      // Get my certificates
-      $robot_cert = $this->getRobotCert($coProvisioningTargetData);
-      $robot_key = $this->getRobotKey($coProvisioningTargetData);
-      // Instantiate VOMS Client
-      // todo: fixme now that i changed the model
-      $this->_voms_client = $this->getVomsClient(
-        $coProvisioningTargetData["CoVomsProvisionerServer"][0]["host"],
-        $coProvisioningTargetData["CoVomsProvisionerServer"][0]["port"],
-        $coProvisioningTargetData["CoVomsProvisionerTarget"]['vo'],
-        $robot_cert,
-        $robot_key);
-    } else {
-      return true;
     }
 
     // XXX Now perform an action
@@ -196,12 +191,6 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
    */
   protected function retrieveUserCouRelatedStatus($provisioningData, $coProvisioningTargetData) {
     $this->log(__METHOD__ . "::@", LOG_DEBUG);
-    // fixme: This should be changed now that i have more than one VOMS
-    if(empty($coProvisioningTargetData["CoVomsProvisionerServer"][0]["host"])
-       || empty($coProvisioningTargetData["CoVomsProvisionerServer"][0]["port"])){
-      throw new InvalidArgumentException(_txt('er.notfound',
-        array(_txt('ct.co_voms_provisioner_targets.1'), _txt('er.voms_provisioner.nohst_prt'))));
-    }
     $args = array();
     $args['conditions']['CoProvisioningTarget.id'] = $coProvisioningTargetData["CoVomsProvisionerTarget"]["co_provisioning_target_id"];
     $args['fields'] = array('provision_co_group_id');
@@ -420,5 +409,40 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     $args['contains'] = array('CoVomsProvisionerTargetServer');
     $data = $this->find('first', $args);
     return $data;
+  }
+
+  /**
+   * @param $coProvisioningTargetData
+   * @param $serverlist
+   * @return Object|VomsClient
+   * @throws \GuzzleHttp\Exception\GuzzleException
+   */
+  protected function getFirstVomsAlive($coProvisioningTargetData, $serverlist) {
+    // fixme: Make sure that we do not let the user save less than what we need
+    if(empty($serverlist)) {
+      throw new InvalidArgumentException(_txt('er.notfound',
+        array(_txt('ct.co_voms_provisioner_targets.1'), _txt('er.voms_provisioner.nohst_prt'))));
+    }
+    // Get my certificates
+    $robot_cert = $this->getRobotCert($coProvisioningTargetData);
+    $robot_key = $this->getRobotKey($coProvisioningTargetData);
+    // Instantiate VOMS Client
+
+    foreach($serverlist as $server) {
+      $voms_client = $this->getVomsClient(
+        $server["host"],
+        $server["port"],
+        $coProvisioningTargetData["CoVomsProvisionerTarget"]['vo'],
+        $robot_cert,
+        $robot_key);
+      if(!is_null($voms_client)) {
+        $response = $voms_client->getUserStats();
+        if($response["status_code"] === 200) {
+          $this->plogs(__METHOD__, $server["host"] . ':' . $server["port"] . ' is alive.');
+          return $voms_client;
+        }
+        $voms_client = null;
+      }
+    }
   }
 }

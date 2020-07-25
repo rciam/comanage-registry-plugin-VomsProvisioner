@@ -66,74 +66,7 @@ $token_key = $this->request->params['_Token']['key'];
     // Global javascript variables
     var vo_name = '<?php print trim(filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]["vo"]));?>';
 
-    // todo: Investigate more on filereader. It would be better if we made this a promise
-    // todo: move on separate file
-    function read_file(event, validation_string, input_textbox, file_type) {
-        const fileList = event.target.files;
-        if (!fileList || fileList.length < 1) {
-            alert("File reading not supported in this browser");
-            return;
-        }
-        const file = fileList[0];
-
-        let fileReader = new FileReader();
-        fileReader.onload = (event) => {
-            let payload = event.target.result;
-            if(payload.includes(validation_string)) {
-                let li = input_textbox.closest('li');
-                let description = li.find('.field-desc');
-                let description_text = description.html().split('-')[0].trim();
-                description.html(description_text);
-            }else{
-                let li = input_textbox.closest('li');
-                let description = li.find('.field-desc');
-                let description_text = description.html().split('-')[0].trim();
-                description_text = description_text + "<span style='color:red'>  - Wrong File Input</span>";
-                description.html(description_text);
-                return;
-            }
-            //Encode to base64
-            let result = $.base64.encode(payload);
-            // Add base64 encoded value in the textbox
-            input_textbox.val(result);
-            $('#' + file_type + '-done').show();
-        }
-        fileReader.onprogress = (event) => {
-            progress_element = $('#'+file_type + '-progress');
-            let progress_bar = progress_element.find('.progress-bar');
-            progress_element.show();
-            if (event.loaded && event.total) {
-                // Add a progressbar
-                const percent = Math.round((event.loaded / event.total) * 100);
-                progress_bar.width(percent+'%');
-                console.log('Progress: ' + percent);
-                if( percent === 100) {
-                    progress_element.hide();
-                }
-            }
-        }
-        fileReader.onerror = (event) => {
-            let li = input_textbox.closest('li');
-            let description = li.find('.field-desc');
-            let description_text = description.html().split('-')[0].trim();
-            description_text = description_text + "<span style='color:red'>  - Load File failed</span>";
-            description.html(description_text);
-        }
-        fileReader.readAsText(file);
-    }
-
-    // Generate flash notifications for messages
-    function generateLinkFlash(text, type, timeout) {
-        var n = noty({
-            text: text,
-            type: type,
-            dismissQueue: true,
-            layout: 'topCenter',
-            theme: 'comanage',
-            timeout: timeout
-        });
-    }
-
+    // Tongle between single and bulk load
     function requestMode() {
         if ($('.bulk-mode').is(':visible')
             && $('.single-mode').is(':hidden')) {
@@ -160,6 +93,7 @@ $token_key = $this->request->params['_Token']['key'];
         }
     }
 
+    // Add a Single entry via the Modal
     function addSingle(cvpt_id, host, port, dn) {
         var base_uri = 'https://' + host + ':' + port + '/' + vo_name;
         if($('.voms-server-list').length < 1) {
@@ -180,6 +114,7 @@ $token_key = $this->request->params['_Token']['key'];
         $('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][dn]" value=' + dn + ' id="CoVomsProvisionerServer' + index + 'Dn">').insertBefore(last_element);
     }
 
+    // Remove a single entry
     function removeSrv(element) {
         let voms_row_id = $(element).closest('li').prevUntil('li').last().val();
         let voms_data = {
@@ -361,19 +296,27 @@ $token_key = $this->request->params['_Token']['key'];
         <?php print _txt('pl.voms_provisioner.robot_cert'); ?>
         <span class="required">*</span>
       </div>
-      <div class="field-desc"><?php print _txt('pl.voms_provisioner.robot_cert.desc'); ?></div>
+      <div class="field-desc"><?php print _txt('pl.voms_provisioner.robot_cert.desc'); ?>
+        <?php if(!empty($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_cert'])): ?>
+          <span class="info-box neutral"><?php print _txt('fd.voms_provisioner.floaded'); ?></span>
+        <?php endif; ?>
+      </div>
     </div>
     <div class="field-info">
       <label for="robot_cert" class="loadbutton ui-button ui-corner-all ui-widget"">
         <span class="ui-button-icon ui-icon ui-icon-transferthick-e-w"></span><span class="ui-button-icon-space"> </span>
         <input type="file" id="robot_cert" accept="application/x-x509-ca-cert, .pem" style="display: none"/>
-        Load
+        <?php
+          print (empty($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_cert'])) ? _txt('fd.voms_provisioner.load')
+                                                                                                  : _txt('fd.voms_provisioner.update');
+        ?>
       </label>
       <div id="cert-progress" class="progress volume-slider">
         <div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
       </div>
       <?php print $this->Form->hidden('robot_cert', array('default' => $co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_cert'])) . "\n";?>
-      <em id="cert-done" class="material-icons upload-done">done</em>
+      <em id="cert-done" class="material-icons status-icon success">done</em>
+      <em id="cert-error" class="material-icons status-icon failed">close</em>
     </div>
   </li>
   <li>
@@ -382,19 +325,27 @@ $token_key = $this->request->params['_Token']['key'];
         <?php print _txt('pl.voms_provisioner.robot_key'); ?>
         <span class="required">*</span>
       </div>
-      <div class="field-desc"><?php print _txt('pl.voms_provisioner.robot_key.desc'); ?></div>
+      <div class="field-desc"><?php print _txt('pl.voms_provisioner.robot_key.desc'); ?>
+        <?php if(!empty($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_key'])): ?>
+          <span class="info-box neutral"><?php print _txt('fd.voms_provisioner.floaded'); ?></span>
+        <?php endif; ?>
+      </div>
     </div>
     <div class="field-info">
       <label for="robot_key"  class="loadbutton ui-button ui-corner-all ui-widget"">
         <span class="ui-button-icon ui-icon ui-icon-transferthick-e-w"></span><span class="ui-button-icon-space"> </span>
         <input type="file" id="robot_key" accept="application/x-x509-ca-cert, .pem" style="display: none"/>
-        Load
+        <?php
+          print (empty($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_key'])) ? _txt('fd.voms_provisioner.load')
+                                                                                                 : _txt('fd.voms_provisioner.update');
+        ?>
       </label>
       <div id="key-progress" class="progress volume-slider">
         <div class="progress-bar" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
       </div>
       <?php print $this->Form->hidden('robot_key', array('default' => $co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_key'])) . "\n";?>
-      <em id="key-done" class="material-icons upload-done">done</em>
+      <em id="key-done" class="material-icons status-icon success">done</em>
+      <em id="key-error" class="material-icons status-icon failed">close</em>
     </div>
   </li>
   <?php if($e): ?>

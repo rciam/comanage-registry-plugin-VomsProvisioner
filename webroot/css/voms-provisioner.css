@@ -17,12 +17,35 @@
   width: 6.65em;
 }
 
-.upload-done {
-  background: green;
+.status-icon {
   border-radius: 50%;
   color: white;
   vertical-align: middle !important;
   display: none;
+}
+
+.info-box {
+  border-radius: 0.3rem;
+  position: relative;
+  color: white;
+  display: inline-block;
+  text-align: center;
+  padding: 0.2rem 0.3rem 0.2rem 0.3rem;
+  text-decoration: unset;
+  font-weight: bold;
+  vertical-align: middle !important;
+}
+
+.neutral {
+  background: #06b;
+}
+
+.success {
+  background: green;
+}
+
+.failed {
+  background: red;
 }
 
 .voms-server-list,
@@ -34,6 +57,10 @@
 .field-name-flex {
   margin-top: auto;
   margin-bottom: auto;
+}
+
+.field-info label {
+  margin-bottom: unset;
 }
 
 /* Do not user .fade class. Instead add opacity to background-color property*/

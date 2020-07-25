@@ -3,6 +3,7 @@
 
 <script src="<?php print $this->request->webroot . 'voms_provisioner' ?>/js/bootstrap.min.js"></script>
 <script src="<?php print $this->request->webroot . 'voms_provisioner' ?>/js/jquery/jquery.base64.js"></script>
+<script src="<?php print $this->request->webroot . 'voms_provisioner' ?>/js/voms_provisioner_target.js"></script>
 <script src="<?php print $this->request->webroot . 'voms_provisioner' ?>/js/server.js"></script>
 
 <?php

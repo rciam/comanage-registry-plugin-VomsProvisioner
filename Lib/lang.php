@@ -45,6 +45,9 @@ $cm_voms_provisioner_texts['en_US'] = array(
   'fd.voms_provisioner.del'                => 'Delete',
   'fd.voms_provisioner.srv_add'            => 'VOMs Server',
   'fd.voms_provisioner.add'                => 'Add',
+  'fd.voms_provisioner.update'             => 'Update',
+  'fd.voms_provisioner.load'               => 'Load',
+  'fd.voms_provisioner.floaded'            => 'File Loaded',
 
   // Database operations
   'rs.voms_provisioner.cleared'            => 'Entries Removed',

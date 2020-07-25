@@ -50,22 +50,20 @@ class VomsClient {
     return $this->soap_client;
   }
 
-  protected function checkAlive() {
-  }
-
 
   /**
-   * @param array $user_data ['user' => [
-   * 'emailAddress' => 'john.doe@test.com',
-   * 'institution' => 'Dummy Test',
-   * 'phoneNumber' => '6936936937',
-   * 'surname' => 'Doe',
-   * 'name' => 'John',
-   * 'address' => 'No where....',
-   * ],
-   * 'certificateSubject' => $subject_dn,
-   * 'caSubject' => $certificate_auhority,
-   * ];
+   * @param array $user_data ['user' =>
+                                [
+                                  'emailAddress' => 'john.doe@test.com',
+                                  'institution' => 'Dummy Test',
+                                  'phoneNumber' => '6936936937',
+                                  'surname' => 'Doe',
+                                  'name' => 'John',
+                                  'address' => 'No where....',
+                                ],
+                                'certificateSubject' => $subject_dn,
+                                'caSubject' => $certificate_auhority,
+                             ];
    * @return array [status_code, body|msg] | null
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
