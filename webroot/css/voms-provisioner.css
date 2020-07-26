@@ -71,6 +71,15 @@
   padding-left: 0.2em !important;
 }
 
+#voms-server-list-edit,
+#voms-server-list-delete {
+  max-height: 1.5rem;
+}
+
+.voms-server-list {
+  display: flex;
+}
+
 .field-name-flex {
   margin-top: auto;
   margin-bottom: auto;

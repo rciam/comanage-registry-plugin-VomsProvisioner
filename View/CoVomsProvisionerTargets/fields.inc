@@ -98,12 +98,13 @@ $token_key = $this->request->params['_Token']['key'];
     // Add a Single entry via the Modal
     function addSingle(cvpt_id, protocol, host, port, dn) {
         var base_uri = protocol + '://' + host + ':' + port + '/' + vo_name;
+        let base_uri_elem = '<span class="voms-server-uri">' + base_uri + '</span>';
         if($('.voms-server-list').length < 1) {
             const actions = `<?php print $this->element("servrow")?>`;
-            $('#co_voms_provisioner_servers_list').prepend('<li class="voms-server-list">' + actions + base_uri + '</li>');
+            $('#co_voms_provisioner_servers_list').prepend('<li class="voms-server-list">' + actions + base_uri_elem + '</li>');
         } else {
             const actions = `<?php print $this->element("servrow")?>`;
-            $('<li class="voms-server-list">' + actions + base_uri + '</li>').insertAfter('.voms-server-list:last');
+            $('<li class="voms-server-list">' + actions + base_uri_elem + '</li>').insertAfter('.voms-server-list:last');
         }
 
         let index = $('.voms-server-list').length -1;
