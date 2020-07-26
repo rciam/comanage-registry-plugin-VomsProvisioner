@@ -2,16 +2,16 @@
 ?>
 
 <?php if(!empty($base_uri)): ?>
-<li class="voms-server-list">
+<li id="voms-server-entry<?php print $id; ?>" data-server_id="<?php print $id; ?>" class="voms-server-list">
   <a href="#"
      id='voms-server-list-edit'
-     onclick="editSrv(this)"
+     onclick="edit_voms_field(this)"
      class='ui-button ui-corner-all ui-widget'>
     <span class="ui-button-icon ui-icon ui-icon-pencil"></span>
   </a>
   <a href="#"
      id='voms-server-list-delete'
-     onclick="removeSrv(this)"
+     onclick="rmv_voms_entry(this)"
      class='ui-button ui-corner-all ui-widget'>
     <span class="ui-button-icon ui-icon ui-icon-closethick"></span>
   </a>

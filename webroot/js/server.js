@@ -26,7 +26,7 @@ function bulkVomsGet(url) {
             // Now i have my data
             parseJsonVoms(data);
             // dismiss modal
-            $('#vomsAddModal').modal('hide');
+            $('#vomsModal').modal('hide');
             if($('.voms-server-list').length > 0) {
                 $('#voms-server-clr-btn').show();
             }
@@ -34,7 +34,7 @@ function bulkVomsGet(url) {
         .catch(error => {
             generateLinkFlash(error, "error", 5000);
             console.log('bulk fetch error: ' + error);
-            $('#vomsAddModal').modal('hide');
+            $('#vomsModal').modal('hide');
         });
 }
 
@@ -61,7 +61,7 @@ function parseJsonVoms(data) {
                     // Assume that the protocol is https
                     protocol = 'https';
                 }
-                addSingle(co_voms_provisioner_target_id, protocol, server.HostName, server.Port, server.DN);
+                add_single_voms(co_voms_provisioner_target_id, protocol, server.HostName, server.Port, server.DN);
             });
         }
     });

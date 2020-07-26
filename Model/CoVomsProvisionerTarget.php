@@ -70,13 +70,13 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     ),
     'robot_cert' => array(
       'rule' => 'notBlank',
-      'required' => false,
-      'allowEmpty' => true
+      'required' => true,
+      'allowEmpty' => false
     ),
     'robot_key' => array(
       'rule' => 'notBlank',
-      'required' => false,
-      'allowEmpty' => true
+      'required' => true,
+      'allowEmpty' => false
     )
   );
 

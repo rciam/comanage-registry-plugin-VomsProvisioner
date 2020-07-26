@@ -67,7 +67,7 @@ $token_key = $this->request->params['_Token']['key'];
     var vo_name = '<?php print trim(filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]["vo"]));?>';
 
     // Tongle between single and bulk load
-    function requestMode() {
+    function request_mode() {
         if ($('.bulk-mode').is(':visible')
             && $('.single-mode').is(':hidden')) {
             bulkVomsGet($('#bulkURL').val().trim());
@@ -75,12 +75,12 @@ $token_key = $this->request->params['_Token']['key'];
             let port = $('.single-mode').find('#port').val().trim();
             if(port === '' || port == null){
                 generateLinkFlash('<?php print _txt("op.voms_provisioner.noport")?>', "error", 5000);
-                $('#vomsAddModal').modal('hide');
+                $('#vomsModal').modal('hide');
             }
             let host = $('.single-mode').find('#host').val().trim();
             if(host === '' || host == null){
                 generateLinkFlash('<?php print _txt("op.voms_provisioner.nohost")?>', "error", 5000);
-                $('#vomsAddModal').modal('hide');
+                $('#vomsModal').modal('hide');
             }
             // fixme: Fix the data we are saving if there are no actuall data
             let dn = $('.single-mode').find('#dn').val().trim();
@@ -90,13 +90,13 @@ $token_key = $this->request->params['_Token']['key'];
             params = action_tbl[action_tbl.length-1].split('/');
             let cvpt_id = params[1];
             // Get the index
-            addSingle(cvpt_id, protocol, host, port, dn);
-            $('#vomsAddModal').modal('hide');
+            add_single_voms(cvpt_id, protocol, host, port, dn);
+            $('#vomsModal').modal('hide');
         }
     }
 
     // Add a Single entry via the Modal
-    function addSingle(cvpt_id, protocol, host, port, dn) {
+    function add_single_voms(cvpt_id, protocol, host, port, dn) {
         var base_uri = protocol + '://' + host + ':' + port + '/' + vo_name;
         let base_uri_elem = '<span class="voms-server-uri">' + base_uri + '</span>';
         if($('.voms-server-list').length < 1) {
@@ -119,20 +119,14 @@ $token_key = $this->request->params['_Token']['key'];
     }
 
     // Remove a single entry
-    function removeSrv(element) {
-        let voms_row_id = -1;
-         $(element).closest('li').prevUntil('li').each((item, value) => {
-            let id = $(value).attr('id');
-            if(id.includes('CoVomsProvisionerServer') && id.includes('Id') && !id.includes('CoVomsProvisionerTargetId')) {
-                voms_row_id = $(value).val();
-            }
-        });
+    function rmv_voms_entry(element) {
+        const voms_row_id = $(element).closest('li').data('server_id');
         let voms_data = {
             _Token: {}
         };
         voms_data.id = voms_row_id;
         voms_data._Token.key = '<?php echo $token_key;?>';
-        var url_str = '<?php echo $this->Html->url(array(
+        const url_str = '<?php echo $this->Html->url(array(
           'plugin' => Inflector::singularize(Inflector::tableize($this->plugin)),
           'controller' => 'co_voms_provisioner_servers',
           'action' => 'delete',
@@ -163,6 +157,73 @@ $token_key = $this->request->params['_Token']['key'];
         });
     }
 
+    // Edit a single entry
+    function edit_voms_field(element) {
+        const voms_row_id = $(element).closest('li').attr('id');
+        // Load the Modal
+        if($('#vomsModal').length < 1) {
+            $("body").append(`<?php print $this->element('modal')?>`);
+        }
+        $('#vomsModal').modal('show');
+        // Handle the Modal
+        $('#vomsModal h5').hide();
+        $('.mode-toggler-div').hide();
+        $('#voms-server-modal-btn-add').hide();
+        $('.modal-title-edit').show();
+        $('#voms-server-modal-btn-edit').show();
+        // Get the values from the hidden fields
+        $(element).closest('li').prevUntil('li').each((item, value) => {
+            let id = $(value).attr('id');
+            if(id.includes('CoVomsProvisionerServer')) {
+                if(id.includes('Protocol')) {
+                    let stored_value = $(value).val();
+                    $("#protocol-toggler option[value='" + stored_value + "']").attr("selected", "selected");
+                }
+                if(id.includes('Port')) {
+                    $('#port').val($(value).val());
+                }
+                if(id.includes('Host')) {
+                    $('#host').val($(value).val());
+                }
+                if(id.includes('Dn')) {
+                    $('#dn').val($(value).val());
+                }
+            }
+        });
+        // Keep track of the entry i want to update
+        $('#voms-server-modal-btn-edit').attr('data-voms_id', voms_row_id);
+    }
+
+    function update_voms_field() {
+        host = $('#host').val().trim();
+        port = $('#port').val().trim();
+        dn = $('#dn').val().trim();
+        protocol = $('#protocol-toggler option:selected').val().trim();
+        server_id = $('#voms-server-modal-btn-edit').data('voms_id');
+        // Find and update the base uri
+        base_uri = protocol + '://' + host + ':' + port + '/' + vo_name;
+        $('#' + server_id).find('span').text(base_uri);
+        // Update the hidden fields
+        $('#' + server_id).closest('li').prevUntil('li').each((item, value) => {
+            let id = $(value).attr('id');
+            if(id.includes('CoVomsProvisionerServer')) {
+                if(id.includes('Protocol')) {
+                    $(value).val(protocol);
+                }
+                if(id.includes('Port')) {
+                    $(value).val(port);
+                }
+                if(id.includes('Host')) {
+                    $(value).val(host);
+                }
+                if(id.includes('Dn')) {
+                    $(value).val(dn);
+                }
+            }
+        });
+        $('#vomsModal').modal('hide');
+    }
+
     $(function() {
         // Hide clear if the Server list is empty
         if($('.voms-server-list').length > 0) {
@@ -187,9 +248,21 @@ $token_key = $this->request->params['_Token']['key'];
 
         $('#voms-server-add-btn').on('click', () => {
             // XXX Use ES6 template literal(Template Strings) to load the template
-            $("body").append(`<?php print $this->element('modal')?>`);
-            $('#vomsAddModal').modal('show');
-             // $('#myInput').focus();
+            // Load the Modal
+            if($('#vomsModal').length < 1) {
+                $("body").append(`<?php print $this->element('modal')?>`);
+            }
+            $('#vomsModal').modal('show');
+            // Handle the Modal
+            $('#vomsModal h5').hide();
+            $('#voms-server-modal-btn-edit').hide();
+            $('.mode-toggler-div').show();
+            $('#voms-server-modal-btn-add').show();
+            $('.modal-title-add').show();
+            // Reset fields
+            $('#port').val('');
+            $('#host').val('');
+            $('#dn').val('');
         });
 
         $('#voms-server-clr-btn').on('click', () => {
@@ -273,12 +346,9 @@ $token_key = $this->request->params['_Token']['key'];
           foreach($co_voms_provisioner_targets[0]["CoVomsProvisionerServer"] as $sindex => $server) {
             $sprefix = 'CoVomsProvisionerServer.' . $sindex;
             $base_uri =
-              filter_var($server['protocol'], FILTER_SANITIZE_SPECIAL_CHARS)
-              . '://'
-              . filter_var($server['host'], FILTER_SANITIZE_SPECIAL_CHARS)
-              . ':'
-              . filter_var($server['port'], FILTER_SANITIZE_SPECIAL_CHARS)
-              . '/'
+              filter_var($server['protocol'], FILTER_SANITIZE_SPECIAL_CHARS) . '://'
+              . filter_var($server['host'], FILTER_SANITIZE_SPECIAL_CHARS) . ':'
+              . filter_var($server['port'], FILTER_SANITIZE_SPECIAL_CHARS) . '/'
               . filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]["vo"], FILTER_SANITIZE_SPECIAL_CHARS);
 
             print $this->Form->hidden($sprefix . '.id', array('default' => filter_var($server['id']))) . "\n";
@@ -287,7 +357,10 @@ $token_key = $this->request->params['_Token']['key'];
             print $this->Form->hidden($sprefix . '.host', array('default' => filter_var($server['host']))) . "\n";
             print $this->Form->hidden($sprefix . '.port', array('default' => filter_var($server['port']))) . "\n";
             print $this->Form->hidden($sprefix . '.dn', array('default' => filter_var($server['dn']))) . "\n";
-            print $this->element('servrow', array('base_uri' => $base_uri));
+            print $this->element('servrow', array(
+              'base_uri' => $base_uri,
+              'id' => filter_var($server['id']),
+            ));
           }
         ?>
         <li class="voms-server-list-btn">

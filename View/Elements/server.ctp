@@ -59,10 +59,17 @@
   </div>
   <div class="modal-footer border-top-0 d-flex justify-content-center">
     <a href="#"
-       id='voms-server-delete'
-       onclick="requestMode()"
+       id='voms-server-modal-btn-add'
+       onclick="request_mode()"
        style="text-decoration: none;"
        class="spin submit-button mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect"><?php print _txt('fd.voms_provisioner.add'); ?>
+    </a>
+    <a href="#"
+       id='voms-server-modal-btn-edit'
+       style="text-decoration: none;"
+       onclick="update_voms_field(this)"
+       data-voms_id=-1
+       class="spin submit-button mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-js-ripple-effect"><?php print _txt('fd.voms_provisioner.update'); ?>
     </a>
   </div>
 </form>
