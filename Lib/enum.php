@@ -33,6 +33,15 @@ class VomsServerConfigEnum {
   );
 }
 
+class VomsServerHttpProtocolEnum {
+  const HTTP = 'http';
+  const HTTPS = 'https';
+  const type = array(
+    'http' => 'Http',
+    'https' => 'Https',
+  );
+}
+
 class VomsSoapServicesEnum {
   const VOMS_CERTIFICATES = 'VOMSCertificates';
   const VOMS_ADMIN = 'VOMSAdmin';

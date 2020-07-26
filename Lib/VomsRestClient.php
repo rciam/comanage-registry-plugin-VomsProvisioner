@@ -44,7 +44,17 @@ class VomsRestClient extends VomsHttp {
       return [
         'status_code' => $response->getStatusCode(),
         'msg' => $response->getReasonPhrase(),
+        'data' => $response->getBody()->getContents(),
       ];
+    } catch(\GuzzleHttp\Exception\RequestException $e) {
+      if ($e->hasResponse()) {
+        $response = $e->getResponse();
+        return [
+          'status_code' => $response->getStatusCode(),
+          'msg' => $response->getReasonPhrase(),
+//          'data' => $response->getBody()->getContents(), // This is an html page
+        ];
+      }
     } catch(Exception $e) {
       return [
         'status_code' => $e->getCode(),

@@ -289,6 +289,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
   }
 
   /**
+   * @param string $protocol
    * @param string $host
    * @param integer $port
    * @param string $vo_name
@@ -296,9 +297,9 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
    * @param string $robot_key
    * @return Object VomsClient
    */
-  protected function getVomsClient($host, $port, $vo_name, $robot_cert, $robot_key) {
+  protected function getVomsClient($protocol, $host, $port, $vo_name, $robot_cert, $robot_key) {
     if(is_null($this->_voms_client)) {
-      $this->_voms_client = new VomsClient($host, $port, $vo_name, $robot_cert, $robot_key);
+      $this->_voms_client = new VomsClient($protocol, $host, $port, $vo_name, $robot_cert, $robot_key);
     }
     return $this->_voms_client;
   }
@@ -430,6 +431,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
 
     foreach($serverlist as $server) {
       $voms_client = $this->getVomsClient(
+        $server["protocol"],
         $server["host"],
         $server["port"],
         $coProvisioningTargetData["CoVomsProvisionerTarget"]['vo'],
@@ -438,7 +440,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       if(!is_null($voms_client)) {
         $response = $voms_client->getUserStats();
         if($response["status_code"] === 200) {
-          $this->plogs(__METHOD__, $server["host"] . ':' . $server["port"] . ' is alive.');
+          $this->plogs(__METHOD__, $server["protocol"] . "//:" . $server["host"] . ':' . $server["port"] . ' is alive.');
           return $voms_client;
         }
         $voms_client = null;

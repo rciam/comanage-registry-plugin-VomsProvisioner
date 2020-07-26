@@ -73,34 +73,36 @@ $token_key = $this->request->params['_Token']['key'];
             bulkVomsGet($('#bulkURL').val().trim());
         } else {
             let port = $('.single-mode').find('#port').val().trim();
-            if(port === '' || port === null){
+            if(port === '' || port == null){
                 generateLinkFlash('<?php print _txt("op.voms_provisioner.noport")?>', "error", 5000);
                 $('#vomsAddModal').modal('hide');
             }
             let host = $('.single-mode').find('#host').val().trim();
-            if(host === '' || host === null){
+            if(host === '' || host == null){
                 generateLinkFlash('<?php print _txt("op.voms_provisioner.nohost")?>', "error", 5000);
                 $('#vomsAddModal').modal('hide');
             }
+            // fixme: Fix the data we are saving if there are no actuall data
             let dn = $('.single-mode').find('#dn').val().trim();
+            let protocol = $('.single-mode').find('#protocol-toggler option:selected').val().trim();
             // Get the id of the provisioner target
             action_tbl = $('#CoVomsProvisionerTargetEditForm').attr('action').split('edit');
             params = action_tbl[action_tbl.length-1].split('/');
             let cvpt_id = params[1];
             // Get the index
-            addSingle(cvpt_id, host, port, dn);
+            addSingle(cvpt_id, protocol, host, port, dn);
             $('#vomsAddModal').modal('hide');
         }
     }
 
     // Add a Single entry via the Modal
-    function addSingle(cvpt_id, host, port, dn) {
-        var base_uri = 'https://' + host + ':' + port + '/' + vo_name;
+    function addSingle(cvpt_id, protocol, host, port, dn) {
+        var base_uri = protocol + '://' + host + ':' + port + '/' + vo_name;
         if($('.voms-server-list').length < 1) {
-            actions = `<?php print $this->element("servrow")?>`;
+            const actions = `<?php print $this->element("servrow")?>`;
             $('#co_voms_provisioner_servers_list').prepend('<li class="voms-server-list">' + actions + base_uri + '</li>');
         } else {
-            actions = `<?php print $this->element("servrow")?>`;
+            const actions = `<?php print $this->element("servrow")?>`;
             $('<li class="voms-server-list">' + actions + base_uri + '</li>').insertAfter('.voms-server-list:last');
         }
 
@@ -109,9 +111,10 @@ $token_key = $this->request->params['_Token']['key'];
         if(cvpt_id !== '') {
             $('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][co_voms_provisioner_target_id]" value=' + cvpt_id + ' id="CoVomsProvisionerServer' + index + 'CoVomsProvisionerTargetId">').insertBefore(last_element);
         }
-        $('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][host]" value=' + host + ' id="CoVomsProvisionerServer' + index + 'Host">').insertBefore(last_element);
+        $('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][protocol]" value="' + protocol + '" id="CoVomsProvisionerServer' + index + 'Protocol">').insertBefore(last_element);
+        $('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][host]" value="' + host + '" id="CoVomsProvisionerServer' + index + 'Host">').insertBefore(last_element);
         $('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][port]" value=' + port + ' id="CoVomsProvisionerServer' + index + 'Port">').insertBefore(last_element);
-        $('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][dn]" value=' + dn + ' id="CoVomsProvisionerServer' + index + 'Dn">').insertBefore(last_element);
+        $('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][dn]" value="' + dn + '" id="CoVomsProvisionerServer' + index + 'Dn">').insertBefore(last_element);
     }
 
     // Remove a single entry
@@ -168,12 +171,16 @@ $token_key = $this->request->params['_Token']['key'];
         // Read the Robot Cert
         $('#robot_cert[type=file]').change((event) => {
             $('#cert-done').hide();
+            $(this).removeClass('success');
+            $(this).removeClass('failed');
             read_file(event, 'BEGIN CERTIFICATE', $('#CoVomsProvisionerTargetRobotCert'), 'cert');
         });
 
         // Read the Robot Key
         $('#robot_key[type=file]').change((event) => {
             $('#key-done').hide();
+            $(this).removeClass('success');
+            $(this).removeClass('failed');
             read_file(event, 'BEGIN PRIVATE KEY', $('#CoVomsProvisionerTargetRobotKey'), 'key');
         });
 
@@ -259,18 +266,23 @@ $token_key = $this->request->params['_Token']['key'];
       </div>
       <div class="field-desc"><?php print _txt('pl.voms_provisioner.serveruri.desc'); ?></div>
     </div>
-    <div class="field-info">
+    <div class="field-info" style="width: auto !important;">
       <ul id="co_voms_provisioner_servers_list" style="padding-inline-start:unset;">
         <?php
           foreach($co_voms_provisioner_targets[0]["CoVomsProvisionerServer"] as $sindex => $server) {
             $sprefix = 'CoVomsProvisionerServer.' . $sindex;
-            $base_uri = 'https://' . filter_var($server['host']) . ':'
+            $base_uri =
+              filter_var($server['protocol'], FILTER_SANITIZE_SPECIAL_CHARS)
+              . '://'
+              . filter_var($server['host'], FILTER_SANITIZE_SPECIAL_CHARS)
+              . ':'
               . filter_var($server['port'], FILTER_SANITIZE_SPECIAL_CHARS)
-              . '/' . filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]["vo"], FILTER_SANITIZE_SPECIAL_CHARS);
-            // XXX Do not change the sequence
-            // fixme: Get the id more dynamically
+              . '/'
+              . filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]["vo"], FILTER_SANITIZE_SPECIAL_CHARS);
+
             print $this->Form->hidden($sprefix . '.id', array('default' => filter_var($server['id']))) . "\n";
             print $this->Form->hidden($sprefix . '.co_voms_provisioner_target_id', array('default' => filter_var($server['co_voms_provisioner_target_id']))) . "\n";
+            print $this->Form->hidden($sprefix . '.protocol', array('default' => filter_var($server['protocol']))) . "\n";
             print $this->Form->hidden($sprefix . '.host', array('default' => filter_var($server['host']))) . "\n";
             print $this->Form->hidden($sprefix . '.port', array('default' => filter_var($server['port']))) . "\n";
             print $this->Form->hidden($sprefix . '.dn', array('default' => filter_var($server['dn']))) . "\n";
@@ -311,7 +323,7 @@ $token_key = $this->request->params['_Token']['key'];
       </div>
     </div>
     <div class="field-info">
-      <label for="robot_cert" class="loadbutton ui-button ui-corner-all ui-widget"">
+      <label id="cert-load-btn" for="robot_cert" class="loadbutton ui-button ui-corner-all ui-widget"">
         <span class="ui-button-icon ui-icon ui-icon-transferthick-e-w"></span><span class="ui-button-icon-space"> </span>
         <input type="file" id="robot_cert" accept="application/x-x509-ca-cert, .pem" style="display: none"/>
         <?php
@@ -323,8 +335,6 @@ $token_key = $this->request->params['_Token']['key'];
         <div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
       </div>
       <?php print $this->Form->hidden('robot_cert', array('default' => $co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_cert'])) . "\n";?>
-      <em id="cert-done" class="material-icons status-icon success">done</em>
-      <em id="cert-error" class="material-icons status-icon failed">close</em>
     </div>
   </li>
   <li>
@@ -343,7 +353,7 @@ $token_key = $this->request->params['_Token']['key'];
       </div>
     </div>
     <div class="field-info">
-      <label for="robot_key"  class="loadbutton ui-button ui-corner-all ui-widget"">
+      <label id="key-load-btn" for="robot_key"  class="loadbutton ui-button ui-corner-all ui-widget">
         <span class="ui-button-icon ui-icon ui-icon-transferthick-e-w"></span><span class="ui-button-icon-space"> </span>
         <input type="file" id="robot_key" accept="application/x-x509-ca-cert, .pem" style="display: none"/>
         <?php
@@ -355,8 +365,6 @@ $token_key = $this->request->params['_Token']['key'];
         <div class="progress-bar" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
       </div>
       <?php print $this->Form->hidden('robot_key', array('default' => $co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_key'])) . "\n";?>
-      <em id="key-done" class="material-icons status-icon success">done</em>
-      <em id="key-error" class="material-icons status-icon failed">close</em>
     </div>
   </li>
   <?php if($e): ?>

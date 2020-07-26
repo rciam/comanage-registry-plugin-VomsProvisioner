@@ -4,6 +4,7 @@
 //include_once 'enum.php';
 
 class VomsClient {
+  private $protocol = null;
   private $host = null;
   private $port = null;
   private $vo_name = null;
@@ -13,13 +14,15 @@ class VomsClient {
   private $soap_client = null;
   private $_config = array();
 
-  public function __construct($host, $port, $vo_name, $robot_cert, $robot_key) {
+  public function __construct($protocol, $host, $port, $vo_name, $robot_cert, $robot_key) {
+    $this->protocol = $protocol;
     $this->host = $host;
     $this->port = $port;
     $this->vo_name = $vo_name;
     $this->robot_cert = $robot_cert;
     $this->robot_key = $robot_key;
     $this->_config = [
+      $this->protocol,
       $this->host,
       $this->port,
       $this->vo_name,

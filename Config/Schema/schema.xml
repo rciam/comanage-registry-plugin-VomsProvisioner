@@ -53,6 +53,7 @@
       <constraint>REFERENCES cm_co_voms_provisioner_targets(id)</constraint>
     </field>
     <field name="host" type="C" size="256" />
+    <field name="protocol" type="C" size="5" />
     <field name="port" type="I" />
     <field name="dn" type="C" size="256" />
     <field name="created" type="T" />

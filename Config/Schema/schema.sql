@@ -22,6 +22,7 @@ CREATE TABLE cm_co_voms_provisioner_servers
     id                            serial PRIMARY KEY,
     co_voms_provisioner_target_id integer NOT NULL,
     host                          varchar(256),
+    protocol                      varchar(5),
     port                          integer,
     dn                            varchar(256),
     created                       timestamp without time zone,

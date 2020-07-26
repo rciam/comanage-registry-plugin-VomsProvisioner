@@ -2,6 +2,7 @@
 //require_once '../Vendor/autoload.php';
 
 abstract class VomsHttp {
+  protected $protocol = null;
   protected $host = null;
   protected $port = null;
   protected $vo_name = null;
@@ -20,7 +21,8 @@ abstract class VomsHttp {
    * @param $robot_cert
    * @param $robot_key
    */
-  public function __construct($host, $port, $vo_name, $robot_cert, $robot_key) {
+  public function __construct($protocol, $host, $port, $vo_name, $robot_cert, $robot_key) {
+    $this->protocol = $protocol;
     $this->host = $host;
     $this->port = $port;
     $this->vo_name = $vo_name;
@@ -65,10 +67,10 @@ abstract class VomsHttp {
    * @todo generalize the construction of the endpoint
    */
   protected function baseUri() {
-    if(is_null($this->host) || is_null($this->port) || is_null($this->vo_name)) {
+    if(is_null($this->protocol) || is_null($this->host) || is_null($this->port) || is_null($this->vo_name)) {
       return null;
     }
-    return 'https://' . $this->host . ':' . $this->port;
+    return $this->protocol . '://' . $this->host . ':' . $this->port;
   }
 
   /**

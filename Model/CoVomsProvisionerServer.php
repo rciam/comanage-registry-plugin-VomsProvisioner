@@ -58,7 +58,9 @@ class CoVomsProvisionerServer extends AppModel {
       'allowEmpty' => true
     ),
     'dn' => array(
-      'rule' => 'notBlank'
+      'rule' => array('custom', '.*'), // todo: Add/Create a regex to validate the subject DN
+      'required' => false,
+      'allowEmpty' => true
     )
   );
 }

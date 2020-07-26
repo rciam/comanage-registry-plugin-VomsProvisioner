@@ -410,12 +410,34 @@ class VomsSoapClient extends VomsHttp {
       return [
         'status_code' => $response->getStatusCode(),
         'msg' => $response->getReasonPhrase(),
+        'data' => $response->getBody()->getContents(),
       ];
+    } catch(\GuzzleHttp\Exception\RequestException $e) {
+      if ($e->hasResponse()) {
+        $response = $e->getResponse();
+        return [
+          'status_code' => $response->getStatusCode(),
+          'msg' => $response->getReasonPhrase(),
+          'data' => $this->parseSoapResponse($response->getBody()->getContents()),
+        ];
+      }
     } catch(Exception $e) {
       return [
         'status_code' => $e->getCode(),
         'msg' => $e->getMessage(),
       ];
     }
+  }
+
+  /**
+   * @param string $raw_xml SOAP xml response
+   * @return array SOAP Response Content
+   */
+  private function parseSoapResponse($raw_xml) {
+    $xml = simplexml_load_string($raw_xml);
+    $xml->registerXPathNamespace('xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+    $xml->registerXPathNamespace('xsd', 'http://www.w3.org/2001/XMLSchema');
+    $xml->registerXPathNamespace('soapenv', 'http://schemas.xmlsoap.org/soap/envelope/');
+    return $xml->xpath('//soapenv:Body/soapenv:Fault');
   }
 }

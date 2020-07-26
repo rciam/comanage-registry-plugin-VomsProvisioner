@@ -55,8 +55,13 @@ function parseJsonVoms(data) {
                 $('.voms-server-list-input').remove();
             }
 
-            $.each(servers, (server) => {
-                addSingle(co_voms_provisioner_target_id, server.HostName, server.Port, server.DN);
+            $.each(servers, (index, server) => {
+                protocol = '';
+                if (server.Protocol == null || server.Protocol === '') {
+                    // Assume that the protocol is https
+                    protocol = 'https';
+                }
+                addSingle(co_voms_provisioner_target_id, protocol, server.HostName, server.Port, server.DN);
             });
         }
     });

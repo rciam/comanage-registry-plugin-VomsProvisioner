@@ -45,6 +45,7 @@ class AppSchema extends CakeSchema
     'id' => array('type' => 'integer', 'autoIncrement' => true, 'null' => false, 'default' => null, 'length' => 10, 'key' => 'primary'),
     'co_voms_provisioner_target_id' => array('type' => 'integer', 'null' => false, 'length' => 10),
     'host' => array('type' => 'string', 'null' => true, 'length' => 256),
+    'protocol' => array('type' => 'string', 'null' => true, 'length' => 5),
     'port' => array('type' => 'integer', 'null' => true, 'length' => 10),
     'dn' => array('type' => 'string', 'null' => true, 'length' => 256),
     'created' => array('type' => 'datetime', 'null' => true),
