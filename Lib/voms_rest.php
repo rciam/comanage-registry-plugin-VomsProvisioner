@@ -21,6 +21,7 @@ require_once "VomsClient.php";
 
 // XXX We need to clarify what deprovisioning means in order to understand what action is needed?
 
+$protocol = 'https';
 $host = 'voms2.hellasgrid.gr';
 $port = '8443';
 $vo = 'checkin-integration';
@@ -30,7 +31,7 @@ $action = 'create-user.action';
 $dn = 'CN=IOANNIS IGOUMENOS IPYuCDUQz9Pd0Fzn,O=EGI Foundation,OU=AAI-Pilot,O=EGI'; // LINKEDIN
 $ca = '/O=EGI/OU=AAI-Pilot/CN=EGI Simple Demo CA';
 
-$rest_base_url = 'https://' . $host . ':' . $port . '/voms/' . $vo . '/apiv2';
+$rest_base_url = $protocol . '://' . $host . ':' . $port . '/voms/' . $vo . '/apiv2';
 // XXX i should make these configuration
 // 1. Upload as files
 // 2. Parse and store in database
@@ -132,7 +133,7 @@ $delete_user = array(
 //  fwrite($handle_fkey, $user_key);
 //  fclose($handle_fkey);
 //  chmod($user_fkey, 0644);
-$params = array($host, $port, $vo, $user_cert, $user_key);
+$params = array($protocol, $host, $port, $vo, $user_cert, $user_key);
 
 //Create a restClient
 $restClient = new VomsClient(...$params);
@@ -157,7 +158,7 @@ $create_user_data = array(
 //  'caSubject' => $ca,
 //);
 //     'institution' => 'Dummy Test',
-var_dump($restClient->createUser($create_user_data)); // ok
+//var_dump($restClient->createUser($create_user_data)); // ok
 
 // Suspend user
 $suspend_payload = array(
@@ -167,11 +168,9 @@ $suspend_payload = array(
 );
 //$restClient->vomsRequest('suspend-user.action', $suspend_payload);
 
-$new_group = array(
-  "groupName"=> "test_group_ioigoume",
-  "groupDescription" => "This is a test group"
-);
-//$restClient->vomsRequest('create-group.action', $new_group);
+$groupName = 'testgroupioigoume';
+$groupDescription = "This is a test group";
+var_export($restClient->createGroup($vo, $groupName, $groupDescription));
 
 $restore_payload = array(
   'certificateSubject' => 'CN=IOANNIS IGOUMENOS IPYuCDUQz9Pd0Fzn,O=EGI Foundation,OU=AAI-Pilot,O=EGI',

@@ -364,17 +364,24 @@ class VomsClient {
   }
 
   /**
-   * @param string $groupName must have the format e.g "/checkin-integration/testGroup"
+   * @param string $voname            The VO under which we will create the new Group
+   * @param string $groupName         Name of the Group we want to create
+   * @param string $groupDescription  A short description for the Group
    * @return array Response
    * @throws \GuzzleHttp\Exception\GuzzleException
+   * @todo think on how to implement subgroups
    */
-  public function createGroup($groupName) {
+  public function createGroup($voname, $groupName, $groupDescription='') {
     if(empty($groupName)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
-      'groupName' => $groupName,
+      'groupName' => '/' . $voname . '/' . $groupName,
     ];
+    if(!empty($groupDescription)) {
+      $post_fields['groupDescription'] = $groupDescription;
+      return $this->restClient()->vomsRequest(VomsRestActionsEnum::CREATE_GROUP, $post_fields, false);
+    }
     return $this->soapClient()->vomsRequest(VomsSoapActionsEnum::CREATE_GROUP, $post_fields, false);
   }
 

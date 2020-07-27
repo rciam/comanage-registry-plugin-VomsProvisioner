@@ -157,7 +157,7 @@ $token_key = $this->request->params['_Token']['key'];
         });
     }
 
-    // Edit a single entry
+    // Edit/Load a single VOMS entry UI side
     function edit_voms_field(element) {
         const voms_row_id = $(element).closest('li').attr('id');
         // Load the Modal
@@ -194,6 +194,7 @@ $token_key = $this->request->params['_Token']['key'];
         $('#voms-server-modal-btn-edit').attr('data-voms_id', voms_row_id);
     }
 
+    // Update the UI side of a single VOMS field
     function update_voms_field() {
         host = $('#host').val().trim();
         port = $('#port').val().trim();
@@ -224,11 +225,69 @@ $token_key = $this->request->params['_Token']['key'];
         $('#vomsModal').modal('hide');
     }
 
+    // Remove all VOMS entries from the database
+    function clear_voms_entries() {
+        var $srv_data = {
+            _Token: {}
+        };
+        $srv_data._Token.key = '<?php echo $token_key;?>';
+        var url_str = '<?php echo $this->Html->url(array(
+          'plugin' => Inflector::singularize(Inflector::tableize($this->plugin)),
+          'controller' => 'co_voms_provisioner_targets',
+          'action' => 'clearsrv',
+          'co'  => $cur_co['Co']['id'])); ?>';
+        $.ajax({
+            type: "POST",
+            url: url_str,
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+                xhr.setRequestHeader('X-CSRF-Token', '<?php echo $token_key;?>');
+            },
+            cache:false,
+            data: $srv_data,
+            success: function(response) {
+                // Remove all the li elements
+                $('.voms-server-list').remove();
+                // Remove all the VomsServer input elements
+                $('input[type="hidden"][id^="CoVomsProvisionerServer"]').remove();
+                // Disable clear button
+                $('#voms-server-clr-btn').hide();
+                generateLinkFlash("<?php print _txt('rs.voms_provisioner.cleared') ?>","success", 5000);
+            },
+            error: function(response) {
+                generateLinkFlash("<?php print _txt('rs.voms_provisioner.cleared.fail') ?>","error", 5000);
+                console.log(response.responseText);
+            }
+        });
+    }
+
     $(function() {
         // Hide clear if the Server list is empty
         if($('.voms-server-list').length > 0) {
             $('#voms-server-clr-btn').show();
         }
+
+        // Clear/Delete All Dialog Configuration
+        $("#server-list-clear-dialog").dialog({
+            dialogClass: "no-close",
+            autoOpen: false,
+            buttons: {
+                "<?php print _txt('fd.voms_provisioner.cancel'); ?>": function() {
+                    $(this).dialog("close");
+                },
+                "<?php print _txt('fd.voms_provisioner.delall'); ?>": function() {
+                    $(this).dialog("close");
+                    clear_voms_entries();
+                }
+            },
+            modal: true,
+            show: {
+                effect: "fade"
+            },
+            hide: {
+                effect: "fade"
+            }
+        });
 
         // Read the Robot Cert
         $('#robot_cert[type=file]').change((event) => {
@@ -266,38 +325,8 @@ $token_key = $this->request->params['_Token']['key'];
         });
 
         $('#voms-server-clr-btn').on('click', () => {
-            var $srv_data = {
-                _Token: {}
-            };
-            $srv_data._Token.key = '<?php echo $token_key;?>';
-            var url_str = '<?php echo $this->Html->url(array(
-              'plugin' => Inflector::singularize(Inflector::tableize($this->plugin)),
-              'controller' => 'co_voms_provisioner_targets',
-              'action' => 'clearsrv',
-              'co'  => $cur_co['Co']['id'])); ?>';
-            $.ajax({
-                type: "POST",
-                url: url_str,
-                beforeSend: function(xhr) {
-                    xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-                    xhr.setRequestHeader('X-CSRF-Token', '<?php echo $token_key;?>');
-                },
-                cache:false,
-                data: $srv_data,
-                success: function(response) {
-                    // Remove all the li elements
-                    $('.voms-server-list').remove();
-                    // Remove all the VomsServer input elements
-                    $('input[type="hidden"][id^="CoVomsProvisionerServer"]').remove();
-                    // Disable clear button
-                    $('#voms-server-clr-btn').hide();
-                    generateLinkFlash("<?php print _txt('rs.voms_provisioner.cleared') ?>","success", 2000);
-                },
-                error: function(response) {
-                    generateLinkFlash("<?php print _txt('rs.voms_provisioner.cleared.fail') ?>","error", 2000);
-                    console.log(response.responseText);
-                }
-            });
+            // Open the dialog to confirm VOMS clear
+            $("#server-list-clear-dialog").dialog("open");
         });
     });
 </script>
@@ -454,3 +483,7 @@ $token_key = $this->request->params['_Token']['key'];
     </li>
   <?php endif; ?>
 </ul>
+
+<?php
+  print $this->element('dialog');
+?>

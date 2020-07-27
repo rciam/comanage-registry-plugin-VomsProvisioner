@@ -2,6 +2,7 @@
 
 class VomsRestActionsEnum {
   const CREATE_USER = 'create-user.action';
+  const CREATE_GROUP = 'create-group.action';
   const GET_EXPIRED_USERS = 'expired-users.action';
   const GET_SUSPENDED_USERS = 'suspended-users.action';
   const USER_STATS = 'user-stats.action';
@@ -10,6 +11,7 @@ class VomsRestActionsEnum {
   const DELETE_USER = 'deleteUser';
   const type = array(
     'create-user.action' => 'Create User',
+    'create-group.action' => 'Create Group',
     'expired-users.action' => 'Get Expired Users',
     'suspended-users.action' => 'Get Suspended Users',
     'user-stats.action' => 'Get User Stats',

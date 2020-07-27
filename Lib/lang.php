@@ -48,7 +48,9 @@ $cm_voms_provisioner_texts['en_US'] = array(
   'fd.voms_provisioner.srv'                => 'Add',
   'fd.voms_provisioner.clr'                => 'Clear',
   'fd.voms_provisioner.edit'               => 'Edit',
+  'fd.voms_provisioner.cancel'             => 'Cancel',
   'fd.voms_provisioner.del'                => 'Delete',
+  'fd.voms_provisioner.delall'             => 'Delete all items',
   'fd.voms_provisioner.srv_add'            => 'Add VOMs Server(s)',
   'fd.voms_provisioner.srv_edit'           => 'Edit VOMs Server',
   'fd.voms_provisioner.add'                => 'Add',
@@ -71,5 +73,7 @@ $cm_voms_provisioner_texts['en_US'] = array(
 
   // Known VOMs error
   'op.voms_provisioner.vo_existing_person' => 'A user holding a certificate with the following subject %1$s already exists in this VO.',
+  'op.voms_provisioner.clear'              => 'VOMS entries will be permanently deleted and cannot be recovered. Are you sure?',
+  'op.voms_provisioner.remove'             => 'Delete VOMS',
 
 );
