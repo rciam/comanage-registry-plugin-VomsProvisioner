@@ -17,17 +17,13 @@ function read_file(event, validation_string, input_textbox, file_type) {
         let payload = event.target.result;
 
         if(payload.includes(validation_string)) {
-            let li = input_textbox.closest('li');
-            let description = li.find('.field-desc');
-            let description_text = description.html().split('<span')[0].trim();
-            description_text = description_text.trim() + ' <span class="info-box success"><i class="material-icons">info</i>File Loaded</span>';
-            description.html(description_text);
+            let btn_type = input_textbox.closest('.field-info').find('label').attr('id').split('-')[0];
+            $('#' + btn_type + '-info').removeClass('neutral failed').addClass('success');
+            $('#' + btn_type + '-info').show();
         }else{
-            let li = input_textbox.closest('li');
-            let description = li.find('.field-desc');
-            let description_text = description.html().split('<span')[0].trim();
-            description_text = description_text.trim() + ' <span class="info-box failed">Wrong File Input</span>';
-            description.html(description_text);
+            let btn_type = input_textbox.closest('.field-info').find('label').attr('id').split('-')[0];
+            $('#' + btn_type + '-info').removeClass('neutral success').addClass('failed').text('Wrong File Input');
+            $('#' + btn_type + '-info').addClass('failed').show();
             $('#' + file_type + '-load-btn').removeClass('success').addClass('failed');
             return;
         }

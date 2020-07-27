@@ -33,20 +33,13 @@
 }
 
 .info-box {
-  border-radius: 0.3rem;
-  position: relative;
+  display: none;
+  position: absolute;
   color: white;
-  display: inline-block;
   text-align: center;
-  padding: 0.05rem 0.3rem 0.1rem 0.3rem;
   text-decoration: unset;
-  height: 1.5rem;
   font-weight: bold;
-  vertical-align: middle !important;
-}
-
-.info-box .material-icons {
-  margin-top: 0.05rem !important;
+  font-size: 0.5rem;
 }
 
 .info-box .material-icons:hover {
@@ -54,22 +47,22 @@
 }
 
 .info-box.neutral {
-  background: #06b;
+  color: #06b;
 }
 
 .info-box.success {
-  background: green;
+  color: green;
 }
 
 .info-box.failed {
-  background: red;
+  color: red;
 }
 
 .voms-server-list,
 .voms-server-uri,
-.voms-server-list-btn {
+.voms-server-list-btn,
+.field-info-flex {
   background: inherit !important;
-  padding-left: 0.2em !important;
 }
 
 #voms-server-list-edit,
@@ -77,11 +70,16 @@
   max-height: 2em;
 }
 
+.voms-server-uri {
+  margin-left: 0.5rem;
+}
+
 .voms-server-list {
   display: flex;
 }
 
-.field-name-flex {
+.field-name-flex,
+.field-info-flex {
   margin-top: auto;
   margin-bottom: auto;
 }
@@ -90,9 +88,14 @@
   margin-bottom: unset;
 }
 
-/* Do not user .fade class. Instead add opacity to background-color property*/
+.field-info-flex ul {
+  padding-inline-start: inherit;
+  /*margin-left: -0.4rem;*/
+}
+
+/* Do not use .fade class. Instead add opacity to background-color property*/
 .modal-backdrop {
-  background-color: rgb(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
 .modal-header h5 {

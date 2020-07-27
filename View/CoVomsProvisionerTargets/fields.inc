@@ -289,17 +289,27 @@ $token_key = $this->request->params['_Token']['key'];
             }
         });
 
+        if($('#CoVomsProvisionerTargetRobotCert').val() != '') {
+          $('#cert-info').addClass('neutral').show();
+        }
+
+        if($('#CoVomsProvisionerTargetRobotKey').val() != '') {
+            $('#key-info').addClass('neutral').show();
+        }
+
         // Read the Robot Cert
         $('#robot_cert[type=file]').change((event) => {
             $('#cert-done').hide();
-            $(this).removeClass('success failed');
+            $('#cert-info').hide();
+            $(this).removeClass('success failed neutral');
             read_file(event, 'BEGIN CERTIFICATE', $('#CoVomsProvisionerTargetRobotCert'), 'cert');
         });
 
         // Read the Robot Key
         $('#robot_key[type=file]').change((event) => {
             $('#key-done').hide();
-            $(this).removeClass('success failed');
+            $('#key-info').hide();
+            $(this).removeClass('success failed neutral');
             read_file(event, 'BEGIN PRIVATE KEY', $('#CoVomsProvisionerTargetRobotKey'), 'key');
         });
 
@@ -334,7 +344,7 @@ $token_key = $this->request->params['_Token']['key'];
   <?php print _txt('pl.voms_provisioner.info'); ?>
 </div>
 <ul id="<?php print $this->action; ?>_co_voms_provisioner_target" class="fields form-list form-list-admin">
-  <li>
+  <li style="display: flex;">
     <div class="field-name">
       <div class="field-title">
         <?php print _txt('pl.voms_provisioner.vo'); ?>
@@ -369,8 +379,8 @@ $token_key = $this->request->params['_Token']['key'];
       </div>
       <div class="field-desc"><?php print _txt('pl.voms_provisioner.serveruri.desc'); ?></div>
     </div>
-    <div class="field-info" style="width: auto !important;">
-      <ul id="co_voms_provisioner_servers_list" style="padding-inline-start:unset;">
+    <div class="field-info field-info-flex">
+      <ul id="co_voms_provisioner_servers_list"">
         <?php
           foreach($co_voms_provisioner_targets[0]["CoVomsProvisionerServer"] as $sindex => $server) {
             $sprefix = 'CoVomsProvisionerServer.' . $sindex;
@@ -410,22 +420,16 @@ $token_key = $this->request->params['_Token']['key'];
       </ul>
     </div>
   </li>
-  <li>
-    <div class="field-name">
+  <li style="display: flex;">
+    <div class="field-name field-name-flex">
       <div class="field-title">
         <?php print _txt('pl.voms_provisioner.robot_cert'); ?>
         <span class="required">*</span>
       </div>
       <div class="field-desc"><?php print _txt('pl.voms_provisioner.robot_cert.desc'); ?>
-        <?php if(!empty($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_cert'])): ?>
-          <span class="info-box neutral">
-            <i class="material-icons">info</i>
-            <?php print _txt('fd.voms_provisioner.floaded'); ?>
-          </span>
-        <?php endif; ?>
       </div>
     </div>
-    <div class="field-info">
+    <div class="field-info field-info-flex">
       <label id="cert-load-btn" for="robot_cert" class="loadbutton ui-button ui-corner-all ui-widget"">
         <span class="ui-button-icon ui-icon ui-icon-transferthick-e-w"></span><span class="ui-button-icon-space"> </span>
         <input type="file" id="robot_cert" accept="application/x-x509-ca-cert, .pem" style="display: none"/>
@@ -437,25 +441,25 @@ $token_key = $this->request->params['_Token']['key'];
       <div id="cert-progress" class="progress volume-slider">
         <div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
       </div>
+<!--      <i class="material-icons neutral">info</i>-->
+      <?php if(!empty($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_cert'])): ?>
+        <div id="cert-info" class="info-box">
+            <?php print _txt('fd.voms_provisioner.floaded'); ?>
+        </div>
+      <?php endif; ?>
       <?php print $this->Form->hidden('robot_cert', array('default' => $co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_cert'])) . "\n";?>
     </div>
   </li>
-  <li>
-    <div class="field-name">
+  <li style="display: flex;">
+    <div class="field-name field-name-flex">
       <div class="field-title">
         <?php print _txt('pl.voms_provisioner.robot_key'); ?>
         <span class="required">*</span>
       </div>
       <div class="field-desc"><?php print _txt('pl.voms_provisioner.robot_key.desc'); ?>
-        <?php if(!empty($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_key'])): ?>
-          <span class="info-box neutral">
-            <i class="material-icons">info</i>
-            <?php print _txt('fd.voms_provisioner.floaded'); ?>
-          </span>
-        <?php endif; ?>
       </div>
     </div>
-    <div class="field-info">
+    <div class="field-info field-info-flex">
       <label id="key-load-btn" for="robot_key"  class="loadbutton ui-button ui-corner-all ui-widget">
         <span class="ui-button-icon ui-icon ui-icon-transferthick-e-w"></span><span class="ui-button-icon-space"> </span>
         <input type="file" id="robot_key" accept="application/x-x509-ca-cert, .pem" style="display: none"/>
@@ -466,6 +470,9 @@ $token_key = $this->request->params['_Token']['key'];
       </label>
       <div id="key-progress" class="progress volume-slider">
         <div class="progress-bar" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
+      <div id="key-info" class="info-box">
+        <?php print _txt('fd.voms_provisioner.floaded'); ?>
       </div>
       <?php print $this->Form->hidden('robot_key', array('default' => $co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_key'])) . "\n";?>
     </div>
