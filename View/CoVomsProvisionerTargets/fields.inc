@@ -292,16 +292,14 @@ $token_key = $this->request->params['_Token']['key'];
         // Read the Robot Cert
         $('#robot_cert[type=file]').change((event) => {
             $('#cert-done').hide();
-            $(this).removeClass('success');
-            $(this).removeClass('failed');
+            $(this).removeClass('success failed');
             read_file(event, 'BEGIN CERTIFICATE', $('#CoVomsProvisionerTargetRobotCert'), 'cert');
         });
 
         // Read the Robot Key
         $('#robot_key[type=file]').change((event) => {
             $('#key-done').hide();
-            $(this).removeClass('success');
-            $(this).removeClass('failed');
+            $(this).removeClass('success failed');
             read_file(event, 'BEGIN PRIVATE KEY', $('#CoVomsProvisionerTargetRobotKey'), 'key');
         });
 

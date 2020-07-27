@@ -28,16 +28,14 @@ function read_file(event, validation_string, input_textbox, file_type) {
             let description_text = description.html().split('<span')[0].trim();
             description_text = description_text.trim() + ' <span class="info-box failed">Wrong File Input</span>';
             description.html(description_text);
-            $('#' + file_type + '-load-btn').removeClass('success');
-            $('#' + file_type + '-load-btn').addClass('failed');
+            $('#' + file_type + '-load-btn').removeClass('success').addClass('failed');
             return;
         }
         //Encode to base64
         let result = $.base64.encode(payload);
         // Add base64 encoded value in the textbox
         input_textbox.val(result);
-        $('#' + file_type + '-load-btn').removeClass('failed');
-        $('#' + file_type + '-load-btn').addClass('success');
+        $('#' + file_type + '-load-btn').removeClass('failed').addClass('success');
     }
     fileReader.onprogress = (event) => {
         progress_element = $('#'+file_type + '-progress');
@@ -59,8 +57,7 @@ function read_file(event, validation_string, input_textbox, file_type) {
         let description_text = description.html().split('<span')[0].trim();
         description_text = description_text.trim() + ' <span class="info-box failed">Load File failed</span>';
         description.html(description_text);
-        $('#' + file_type + '-load-btn').removeClass('success');
-        $('#' + file_type + '-load-btn').addClass('failed');
+        $('#' + file_type + '-load-btn').removeClass('success').addClass('failed');
     }
     fileReader.readAsText(file);
 }
