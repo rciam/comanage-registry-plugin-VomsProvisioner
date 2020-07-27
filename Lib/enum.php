@@ -42,6 +42,15 @@ class VomsServerHttpProtocolEnum {
   );
 }
 
+class VomsServerImportModeEnum {
+  const APPEND = 'A';
+  const OVERWRITE = 'O';
+  const type = array(
+    'A' => 'Append',
+    'O' => 'Overwrite',
+  );
+}
+
 class VomsSoapServicesEnum {
   const VOMS_CERTIFICATES = 'VOMSCertificates';
   const VOMS_ADMIN = 'VOMSAdmin';

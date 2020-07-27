@@ -21,9 +21,27 @@
   <!-- Bulk Mode -->
   <div class="modal-body bulk-mode" style="display: none;">
     <div class="form-group">
+      <label><?php print _txt('pl.voms_provisioner.importmode.desc'); ?></label>
+      <select id="import-mode-toggler"
+              name="import-mode-toggler">
+        <?php foreach(VomsServerImportModeEnum::type as $value => $text): ?>
+          <?php if($value === VomsServerImportModeEnum::OVERWRITE): ?>
+            <option id="<?php print $value; ?>" selected="selected" value="<?php print $value; ?>"><?php print $text; ?></option>
+          <?php else: ?>
+            <option id="<?php print $value; ?>" value="<?php print $value; ?>"><?php print $text; ?></option>
+          <?php endif; ?>
+        <?php endforeach; ?>
+      </select>
+    </div>
+    <div class="form-group">
       <input type="text" class="form-control" id="bulkURL" aria-describedby="bulkHelp"
              placeholder="<?php print _txt('pl.voms_provisioner.bulkurl'); ?>">
       <small id="bulkHelp" class="form-text text-muted"><?php print _txt('pl.voms_provisioner.bulkurl.desc'); ?></small>
+    </div>
+    <div class="form-group">
+      <input type="text" class="form-control" id="proxyUrl" aria-describedby="proxyHelp"
+             placeholder="<?php print _txt('pl.voms_provisioner.proxyurl'); ?>">
+      <small id="proxyHelp" class="form-text text-muted"><?php print _txt('pl.voms_provisioner.proxyurl.desc'); ?></small>
     </div>
   </div>
   <!-- Single Mode -->

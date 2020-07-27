@@ -285,8 +285,10 @@ $token_key = $this->request->params['_Token']['key'];
                 cache:false,
                 data: $srv_data,
                 success: function(response) {
-                    // Remove from document
+                    // Remove all the li elements
                     $('.voms-server-list').remove();
+                    // Remove all the VomsServer input elements
+                    $('input[type="hidden"][id^="CoVomsProvisionerServer"]').remove();
                     // Disable clear button
                     $('#voms-server-clr-btn').hide();
                     generateLinkFlash("<?php print _txt('rs.voms_provisioner.cleared') ?>","success", 2000);

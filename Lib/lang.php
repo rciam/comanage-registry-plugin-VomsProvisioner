@@ -23,8 +23,12 @@ $cm_voms_provisioner_texts['en_US'] = array(
   // Plugin texts
   'pl.voms_provisioner.serveruri'          => 'Server URI',
   'pl.voms_provisioner.serveruri.desc'     => 'VOMS Base Server URI(s)',
+  'pl.voms_provisioner.importmode'         => 'Import Mode',
+  'pl.voms_provisioner.importmode.desc'    => 'VOMS append or overwrite:',
   'pl.voms_provisioner.bulkurl'            => 'Bulk URL',
   'pl.voms_provisioner.bulkurl.desc'       => 'This is a URL containing a JSON formatted list of provided VOMS for each VO.<br>Check <a href="#">link</a> for further info.',
+  'pl.voms_provisioner.proxyurl'           => 'Proxy URL',
+  'pl.voms_provisioner.proxyurl.desc'      => 'Use a Proxy to by pass Cross Domain request errors.<br>Tested with <a href="https://jsonp.afeld.me/">https://jsonp.afeld.me/</a>.',
   'pl.voms_provisioner.host'               => 'Domain',
   'pl.voms_provisioner.host.desc'          => 'VOMS domain name that will be used to form the VOMS base URI',
   'pl.voms_provisioner.dn'                 => 'DN',

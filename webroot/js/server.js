@@ -14,9 +14,12 @@ function toggle_server_load_mode(selected_val) {
     }
 }
 
+// proxy example prx_url = 'https://jsonp.afeld.me/?url=' + url;
 function bulkVomsGet(url) {
-    // todo:Use this approach as a failover. First do the straight forward way
-    fetch('https://jsonp.afeld.me/?url=' + url, {
+    if($('#proxyUrl').val() !== '' ) {
+        url = $('#proxyUrl').val().trim() + url.trim();
+    }
+    fetch(url.trim(), {
         method: 'GET',
     })
         .then(response => {
@@ -42,17 +45,22 @@ function bulkVomsGet(url) {
 // Then append li and input elements in the body of the edit view
 function parseJsonVoms(data) {
     $.each(data, (index, value) => {
-        if (value.VOName === vo_name) {
+        if (value.VOName.trim() === vo_name.trim()) {
             // Now i have my vo data
             let servers = value.VOMSServers;
             let servers_list = $('#co_voms_provisioner_servers_list');
             action_tbl = $('#CoVomsProvisionerTargetEditForm').attr('action').split('/');
             let co_voms_provisioner_target_id = action_tbl[action_tbl.length - 1];
-            if (servers.length !== 0) {
+            let import_mode = $('#import-mode-toggler option:selected').val();
+            if (servers.length !== 0 && import_mode === 'O') {
                 // Empty the server list
-                servers_list.find('.voms-server-list').remove();
-                // Remove all the hidden fields
-                $('.voms-server-list-input').remove();
+                servers_list.find('.voms-server-list').each((index, element) => {
+                    $(element).find('#voms-server-list-delete').trigger('click');
+                });
+                // Remove all the li elements
+                $('.voms-server-list').remove();
+                // Remove all the VomsServer input elements
+                $('input[type="hidden"][id^="CoVomsProvisionerServer"]').remove();
             }
 
             $.each(servers, (index, server) => {
