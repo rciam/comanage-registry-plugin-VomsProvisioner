@@ -19,7 +19,7 @@
 }
 
 .volume-slider {
-  bottom: 0px;
+  bottom: 0;
   height: 0.25em !important;
   position: absolute;
   width: 6.65em;
@@ -92,7 +92,7 @@
 
 /* Do not user .fade class. Instead add opacity to background-color property*/
 .modal-backdrop {
-  background-color: rgb(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
 .modal-header h5 {
