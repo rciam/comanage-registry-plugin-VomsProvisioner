@@ -27,7 +27,8 @@
  */
 
 App::uses("CoProvisionerPluginTarget", "Model");
-
+App::uses('Security', 'Utility');
+App::uses('Hash', 'Utility');
 
 /**
  * Class VomsProvisionerTarget
@@ -269,9 +270,9 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     if(empty($coProvisioningTargetData["CoVomsProvisionerTarget"]["robot_cert"])) {
       throw new InvalidArgumentException(_txt('er.notfound',
         array(_txt('ct.co_voms_provisioner_targets.1'), _txt('pl.voms_provisioner.robot_cert'))));
-    }
-    $cert_base64 = $coProvisioningTargetData["CoVomsProvisionerTarget"]["robot_cert"];
-    return base64_decode($cert_base64);
+    }  
+    $robot_cert = base64_decode($coProvisioningTargetData["CoVomsProvisionerTarget"]["robot_cert"]);
+    return $robot_cert;
   }
 
   /**
@@ -284,8 +285,25 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       throw new InvalidArgumentException(_txt('er.notfound',
         array(_txt('ct.co_voms_provisioner_targets.1'), _txt('pl.voms_provisioner.robot_key'))));
     }
-    $key_base64 = $coProvisioningTargetData["CoVomsProvisionerTarget"]["robot_key"];
-    return base64_decode($key_base64);
+    Configure::write('Security.useOpenSsl', true);
+    $robot_key = Security::decrypt(base64_decode($coProvisioningTargetData["CoVomsProvisionerTarget"]["robot_key"]), Configure::read('Security.salt'));
+    return $robot_key;
+  }
+
+  /**
+   * Actions to take before a save operation is executed.
+   *
+   * @since  COmanage Registry v3.1.0
+   */
+
+  public function beforeSave($options = array())
+  {
+    $key = Configure::read('Security.salt');
+    Configure::write('Security.useOpenSsl', true);
+    if(!empty($this->data["CoVomsProvisionerTarget"]["robot_key"])) {
+      $robot_key = base64_encode(Security::encrypt(base64_decode($this->data["CoVomsProvisionerTarget"]["robot_key"]), $key));
+      $this->data["CoVomsProvisionerTarget"]["robot_key"] = $robot_key;
+    }
   }
 
   /**
