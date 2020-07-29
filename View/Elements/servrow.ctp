@@ -8,8 +8,9 @@
     <span class="ui-button-icon ui-icon ui-icon-pencil"></span>
   </a>
   <a href="#"
+     data-db="true"
      id='voms-server-list-delete<?php print $server['id']; ?>'
-     onclick="rmv_voms_entry(this)"
+     onclick="rmv_voms_entry(this);return false;""
      class='ui-button ui-corner-all ui-widget voms-server-list-delete'>
     <span class="ui-button-icon ui-icon ui-icon-closethick"></span>
   </a>
@@ -38,8 +39,9 @@
     <span class="ui-button-icon ui-icon ui-icon-pencil"></span>
   </a>
   <a href="#"
-     class='voms-server-list-delete ui-button ui-corner-all ui-widget ui-state-disabled'>
+     data-db="false"
+     onclick="rmv_voms_entry(this);return false;"
+     class='voms-server-list-delete ui-button ui-corner-all ui-widget'>
     <span class="ui-button-icon ui-icon ui-icon-closethick"></span>
   </a>
 <?php endif; ?>
-
