@@ -270,7 +270,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     if(empty($coProvisioningTargetData["CoVomsProvisionerTarget"]["robot_cert"])) {
       throw new InvalidArgumentException(_txt('er.notfound',
         array(_txt('ct.co_voms_provisioner_targets.1'), _txt('pl.voms_provisioner.robot_cert'))));
-    }  
+    }
     $robot_cert = base64_decode($coProvisioningTargetData["CoVomsProvisionerTarget"]["robot_cert"]);
     return $robot_cert;
   }

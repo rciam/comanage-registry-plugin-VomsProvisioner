@@ -72,8 +72,8 @@
   padding-left: 0.2em !important;
 }
 
-#voms-server-list-edit,
-#voms-server-list-delete {
+.voms-server-list-edit,
+.voms-server-list-delete {
   max-height: 2em;
 }
 

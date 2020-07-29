@@ -100,22 +100,23 @@ $token_key = $this->request->params['_Token']['key'];
         var base_uri = protocol + '://' + host + ':' + port + '/' + vo_name;
         let base_uri_elem = '<span class="voms-server-uri">' + base_uri + '</span>';
         if($('.voms-server-list').length < 1) {
-            const actions = `<?php print $this->element("servrow")?>`;
-            $('#co_voms_provisioner_servers_list').prepend('<li class="voms-server-list">' + actions + base_uri_elem + '</li>');
+            const actions = `<?php print $this->element('servrow', array('single_srv_add' => true)); ?>`;
+            var li = $('#co_voms_provisioner_servers_list').prepend('<li class="voms-server-list">' + actions + base_uri_elem + '</li>');
         } else {
-            const actions = `<?php print $this->element("servrow")?>`;
-            $('<li class="voms-server-list">' + actions + base_uri_elem + '</li>').insertAfter('.voms-server-list:last');
+            const actions = `<?php print $this->element('servrow', array('single_srv_add' => true)); ?>`;
+            var li = $('<li class="voms-server-list">' + actions + base_uri_elem + '</li>');
+            li.insertAfter('.voms-server-list:last');
         }
 
         let index = $('.voms-server-list').length -1;
         let last_element = $('.voms-server-list').last();
         if(cvpt_id !== '') {
-            $('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][co_voms_provisioner_target_id]" value=' + cvpt_id + ' id="CoVomsProvisionerServer' + index + 'CoVomsProvisionerTargetId">').insertBefore(last_element);
+            li.append('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][co_voms_provisioner_target_id]" value=' + cvpt_id + ' id="CoVomsProvisionerServer' + index + 'CoVomsProvisionerTargetId">');
         }
-        $('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][protocol]" value="' + protocol + '" id="CoVomsProvisionerServer' + index + 'Protocol">').insertBefore(last_element);
-        $('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][host]" value="' + host + '" id="CoVomsProvisionerServer' + index + 'Host">').insertBefore(last_element);
-        $('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][port]" value=' + port + ' id="CoVomsProvisionerServer' + index + 'Port">').insertBefore(last_element);
-        $('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][dn]" value="' + dn + '" id="CoVomsProvisionerServer' + index + 'Dn">').insertBefore(last_element);
+        li.append('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][protocol]" value="' + protocol + '" id="CoVomsProvisionerServer' + index + 'Protocol">');
+        li.append('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][host]" value="' + host + '" id="CoVomsProvisionerServer' + index + 'Host">');
+        li.append('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][port]" value=' + port + ' id="CoVomsProvisionerServer' + index + 'Port">');
+        li.append('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][dn]" value="' + dn + '" id="CoVomsProvisionerServer' + index + 'Dn">');
     }
 
     // Remove a single entry
@@ -142,12 +143,7 @@ $token_key = $this->request->params['_Token']['key'];
             data: voms_data,
             success: function(response) {
                 // Remove the row and the hidden inputs
-                let voms_row_html = $(element).closest('li');
-                let voms_row_hidden = $(element).closest('li').prevUntil('li');
-                $(voms_row_html).remove();
-                $.each($(voms_row_hidden), (input) => {
-                    $(input).remove();
-                });
+                $(element).closest('li').remove();
                 generateLinkFlash("<?php print _txt('rs.voms_provisioner.cleared.1') ?>","success", 2000);
             },
             error: function(response) {
@@ -159,7 +155,8 @@ $token_key = $this->request->params['_Token']['key'];
 
     // Edit/Load a single VOMS entry UI side
     function edit_voms_field(element) {
-        const voms_row_id = $(element).closest('li').attr('id');
+        const $closest_li = $(element).closest('li');
+        const voms_row_id = $closest_li.attr('id');
         // Load the Modal
         if($('#vomsModal').length < 1) {
             $("body").append(`<?php print $this->element('modal')?>`);
@@ -172,7 +169,7 @@ $token_key = $this->request->params['_Token']['key'];
         $('.modal-title-edit').show();
         $('#voms-server-modal-btn-edit').show();
         // Get the values from the hidden fields
-        $(element).closest('li').prevUntil('li').each((item, value) => {
+        $closest_li.find('input[type="hidden"]').each((item, value) => {
             let id = $(value).attr('id');
             if(id.includes('CoVomsProvisionerServer')) {
                 if(id.includes('Protocol')) {
@@ -205,7 +202,7 @@ $token_key = $this->request->params['_Token']['key'];
         base_uri = protocol + '://' + host + ':' + port + '/' + vo_name;
         $('#' + server_id).find('span').text(base_uri);
         // Update the hidden fields
-        $('#' + server_id).closest('li').prevUntil('li').each((item, value) => {
+        $('#' + server_id).closest('li').find('input[type="hidden"]').each((item, value) => {
             let id = $(value).attr('id');
             if(id.includes('CoVomsProvisionerServer')) {
                 if(id.includes('Protocol')) {
@@ -377,25 +374,10 @@ $token_key = $this->request->params['_Token']['key'];
     <div class="field-info" style="width: auto !important;">
       <ul id="co_voms_provisioner_servers_list" style="padding-inline-start:unset;">
         <?php
-          foreach($co_voms_provisioner_targets[0]["CoVomsProvisionerServer"] as $sindex => $server) {
-            $sprefix = 'CoVomsProvisionerServer.' . $sindex;
-            $base_uri =
-              filter_var($server['protocol'], FILTER_SANITIZE_SPECIAL_CHARS) . '://'
-              . filter_var($server['host'], FILTER_SANITIZE_SPECIAL_CHARS) . ':'
-              . filter_var($server['port'], FILTER_SANITIZE_SPECIAL_CHARS) . '/'
-              . filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]["vo"], FILTER_SANITIZE_SPECIAL_CHARS);
-
-            print $this->Form->hidden($sprefix . '.id', array('default' => filter_var($server['id']))) . "\n";
-            print $this->Form->hidden($sprefix . '.co_voms_provisioner_target_id', array('default' => filter_var($server['co_voms_provisioner_target_id']))) . "\n";
-            print $this->Form->hidden($sprefix . '.protocol', array('default' => filter_var($server['protocol']))) . "\n";
-            print $this->Form->hidden($sprefix . '.host', array('default' => filter_var($server['host']))) . "\n";
-            print $this->Form->hidden($sprefix . '.port', array('default' => filter_var($server['port']))) . "\n";
-            print $this->Form->hidden($sprefix . '.dn', array('default' => filter_var($server['dn']))) . "\n";
             print $this->element('servrow', array(
-              'base_uri' => $base_uri,
-              'id' => filter_var($server['id']),
+              'co_voms_provisioner_targets' => $co_voms_provisioner_targets,
+              'single_srv_add' => false,
             ));
-          }
         ?>
         <li class="voms-server-list-btn">
           <a href="#"
