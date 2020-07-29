@@ -262,6 +262,11 @@ $token_key = $this->request->params['_Token']['key'];
     }
 
     $(function() {
+        if(vo_name == null
+            || vo_name === '') {
+            vo_name = $('#edit_co_voms_provisioner_target').find('.field-info').first().text().trim();
+        }
+
         // Hide clear if the Server list is empty
         if($('.voms-server-list').length > 0) {
             $('#voms-server-clr-btn').show();
