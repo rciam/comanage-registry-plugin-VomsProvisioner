@@ -52,10 +52,10 @@ function parseJsonVoms(data) {
             action_tbl = $('#CoVomsProvisionerTargetEditForm').attr('action').split('/');
             let co_voms_provisioner_target_id = action_tbl[action_tbl.length - 1];
             let import_mode = $('#import-mode-toggler option:selected').val();
-            if (servers.length !== 0 && import_mode === 'O') {
+            if(servers.length !== 0 && import_mode === 'O') {
                 // Empty the server list
                 servers_list.find('.voms-server-list').each((index, element) => {
-                    $(element).find('#voms-server-list-delete').trigger('click');
+                    $(element).find('.voms-server-list-delete').trigger('click');
                 });
                 // Remove all the li elements
                 $('.voms-server-list').remove();

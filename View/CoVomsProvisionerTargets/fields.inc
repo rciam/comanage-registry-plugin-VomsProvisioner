@@ -101,7 +101,8 @@ $token_key = $this->request->params['_Token']['key'];
         let base_uri_elem = '<span class="voms-server-uri">' + base_uri + '</span>';
         if($('.voms-server-list').length < 1) {
             const actions = `<?php print $this->element('servrow', array('single_srv_add' => true)); ?>`;
-            var li = $('#co_voms_provisioner_servers_list').prepend('<li class="voms-server-list">' + actions + base_uri_elem + '</li>');
+            $('#co_voms_provisioner_servers_list').prepend('<li class="voms-server-list">' + actions + base_uri_elem + '</li>');
+            var li = $('.voms-server-list');
         } else {
             const actions = `<?php print $this->element('servrow', array('single_srv_add' => true)); ?>`;
             var li = $('<li class="voms-server-list">' + actions + base_uri_elem + '</li>');
@@ -121,6 +122,10 @@ $token_key = $this->request->params['_Token']['key'];
 
     // Remove a single entry
     function rmv_voms_entry(element) {
+        if($(element).data("db")===false) {
+          $(element).closest('li').remove();
+          return;
+        }
         const voms_row_id = $(element).closest('li').data('server_id');
         let voms_data = {
             _Token: {}
@@ -471,4 +476,4 @@ $token_key = $this->request->params['_Token']['key'];
 
 <?php
   print $this->element('dialog');
-?>
+?> 
