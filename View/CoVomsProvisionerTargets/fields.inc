@@ -66,6 +66,13 @@ $token_key = $this->request->params['_Token']['key'];
     // Global javascript variables
     var vo_name = '<?php print trim(filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]["vo"]));?>';
 
+    function cert_preview(){
+      // Load the Modal
+      if($('#certPreviewModal').length < 1) {
+        $("body").append(`<?php print $this->element('cert_preview')?>`);
+      }
+      $('#certPreviewModal').modal();
+    }
     // Tongle between single and bulk load
     function request_mode() {
         if ($('.bulk-mode').is(':visible')
@@ -411,7 +418,7 @@ $token_key = $this->request->params['_Token']['key'];
       <div class="field-desc"><?php print _txt('pl.voms_provisioner.robot_cert.desc'); ?>
         <?php if(!empty($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_cert'])): ?>
           <span class="info-box neutral">
-            <i class="material-icons">info</i>
+            <a href="#" onclick="cert_preview();return false;" style="color:#fff"><i class="material-icons">info</i></a>
             <?php print _txt('fd.voms_provisioner.floaded'); ?>
           </span>
         <?php endif; ?>
@@ -441,7 +448,6 @@ $token_key = $this->request->params['_Token']['key'];
       <div class="field-desc"><?php print _txt('pl.voms_provisioner.robot_key.desc'); ?>
         <?php if(!empty($co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_key'])): ?>
           <span class="info-box neutral">
-            <i class="material-icons">info</i>
             <?php print _txt('fd.voms_provisioner.floaded'); ?>
           </span>
         <?php endif; ?>

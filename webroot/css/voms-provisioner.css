@@ -109,3 +109,39 @@
 .no-close .ui-dialog-titlebar-close {
   display: none;
 }
+
+.cert-preview {
+  padding: 1rem 1rem;
+}
+
+.cert-preview .row {
+  padding: 0.5rem 0;
+}
+
+.cert-preview .row > div:first-child  {
+  text-align-last: right;
+}
+
+
+.cert-preview span {
+  font-weight: bold;
+}
+
+.serial-number {
+  word-break: break-word;
+}
+
+#certPreviewModal .modal-header .modal-title {
+  text-align: center;
+  width:100%;
+}
+
+#certPreviewModal .modal-footer button {
+  margin: 0px auto;
+}
+
+@media only screen and (max-width: 770px) {
+  .cert-preview .row > div:first-child  {
+    text-align-last: left;
+  }
+}
