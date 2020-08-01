@@ -1,4 +1,5 @@
 <?php
+$this->Html->script('VomsProvisioner.server',  array('inline' => false));
 ?>
 
 <div class="modal-body mode-toggler-div">

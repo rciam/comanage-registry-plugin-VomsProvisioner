@@ -58,8 +58,13 @@ print $this->Form->hidden('co_provisioning_target_id', array('default' => $vv_pt
 $token_key = $this->request->params['_Token']['key'];
 
 // https://dirac.egi.eu/files/diracVOs.json
-// todo: Perhaps i could use this to configure the provisioner automagically
-
+// Load my css
+$this->Html->css('VomsProvisioner.bootstrap.min', array('inline' => false));
+$this->Html->css('VomsProvisioner.voms-provisioner',  array('inline' => false));
+// Load my Javascript
+$this->Html->script('VomsProvisioner.bootstrap.min',  array('inline' => false));
+$this->Html->script('VomsProvisioner.jquery/jquery.base64',  array('inline' => false));
+$this->Html->script('VomsProvisioner.voms_provisioner_target',  array('inline' => false));
 ?>
 
 <script type="text/javascript">
@@ -117,7 +122,6 @@ $token_key = $this->request->params['_Token']['key'];
         }
 
         let index = $('.voms-server-list').length -1;
-        let last_element = $('.voms-server-list').last();
         if(cvpt_id !== '') {
             li.append('<input class="voms-server-list-input" type="hidden" name="data[CoVomsProvisionerServer][' + index + '][co_voms_provisioner_target_id]" value=' + cvpt_id + ' id="CoVomsProvisionerServer' + index + 'CoVomsProvisionerTargetId">');
         }
@@ -156,6 +160,10 @@ $token_key = $this->request->params['_Token']['key'];
             success: function(response) {
                 // Remove the row and the hidden inputs
                 $(element).closest('li').remove();
+                // Hide clear if the Server list is empty
+                if($('.voms-server-list').length < 1) {
+                    $('#voms-server-clr-btn').hide();
+                }
                 generateLinkFlash("<?php print _txt('rs.voms_provisioner.cleared.1') ?>","success", 2000);
             },
             error: function(response) {
@@ -317,6 +325,7 @@ $token_key = $this->request->params['_Token']['key'];
             read_file(event, 'BEGIN PRIVATE KEY', $('#CoVomsProvisionerTargetRobotKey'), 'key');
         });
 
+        // Open the Modal and add one or multiple VOMS
         $('#voms-server-add-btn').on('click', () => {
             // XXX Use ES6 template literal(Template Strings) to load the template
             // Load the Modal
@@ -336,6 +345,7 @@ $token_key = $this->request->params['_Token']['key'];
             $('#dn').val('');
         });
 
+        // Clear the whole VOMS list
         $('#voms-server-clr-btn').on('click', () => {
             // Open the dialog to confirm VOMS clear
             $("#server-list-clear-dialog").dialog("open");
@@ -396,14 +406,14 @@ $token_key = $this->request->params['_Token']['key'];
              id='voms-server-add-btn'
              class='ui-button ui-corner-all ui-widget'>
             <span class="ui-button-icon ui-icon ui-icon-circle-plus"></span><span class="ui-button-icon-space"> </span>
-            <?php print _txt('fd.voms_provisioner.srv'); ?>
+            <?php print _txt('fd.voms_provisioner.add'); ?>
           </a>
           <a href="#"
              style="display:none;"
              id='voms-server-clr-btn'
              class='ui-button ui-corner-all ui-widget'>
             <span class="ui-button-icon ui-icon ui-icon-circle-close"></span><span class="ui-button-icon-space"> </span>
-            <?php print _txt('fd.voms_provisioner.clr'); ?>
+            <?php print _txt('fd.voms_provisioner.clear'); ?>
           </a>
         </li>
       </ul>
@@ -436,7 +446,14 @@ $token_key = $this->request->params['_Token']['key'];
       <div id="cert-progress" class="progress volume-slider">
         <div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
       </div>
-      <?php print $this->Form->hidden('robot_cert', array('default' => $co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_cert'])) . "\n";?>
+      <?php
+      $options = array(
+        'default' => $co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_cert'],
+        'style'   => 'display:none', // Use display none and not hidden element so that we can change its value and not violate Cakephp Form Tapering security feature
+        'type'    => 'hidden',
+      );
+      print $this->Form->input('robot_cert', $options) . "\n";
+      ?>
     </div>
   </li>
   <li>
@@ -465,7 +482,14 @@ $token_key = $this->request->params['_Token']['key'];
       <div id="key-progress" class="progress volume-slider">
         <div class="progress-bar" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
       </div>
-      <?php print $this->Form->hidden('robot_key', array('default' => $co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_key'])) . "\n";?>
+      <?php
+        $options = array(
+          'default' => $co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_key'],
+          'style'   => 'display:none', // Use display none and not hidden element so that we can change its value and not violate Cakephp Form Tapering security feature
+          'type'    => 'hidden',
+        );
+        print $this->Form->input('robot_key', $options) . "\n";
+      ?>
     </div>
   </li>
   <?php if($e): ?>
@@ -474,7 +498,7 @@ $token_key = $this->request->params['_Token']['key'];
         <span class="required"><?php print _txt('fd.req'); ?></span>
       </div>
       <div class="field-info">
-        <?php print $this->Form->submit($submit_label); ?>
+        <?php print $this->Form->submit(_txt('fd.voms_provisioner.save')); ?>
       </div>
     </li>
   <?php endif; ?>
@@ -482,4 +506,5 @@ $token_key = $this->request->params['_Token']['key'];
 
 <?php
   print $this->element('dialog');
-?> 
+?>
+

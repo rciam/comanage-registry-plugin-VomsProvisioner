@@ -136,6 +136,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     $this->_voms_client = $this->getFirstVomsAlive($coProvisioningTargetData, $coProvisioningTargetData["CoVomsProvisionerServer"]);
     if(is_null($this->_voms_client)) {
       // todo: Perhaps return an error here somewhere
+      $this->log(__METHOD__ . '::VOMS client Object is null.', LOG_DEBUG);
       return true;
     }
     // Construct the CO Person's profile
@@ -301,8 +302,11 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     $key = Configure::read('Security.salt');
     Configure::write('Security.useOpenSsl', true);
     if(!empty($this->data["CoVomsProvisionerTarget"]["robot_key"])) {
-      $robot_key = base64_encode(Security::encrypt(base64_decode($this->data["CoVomsProvisionerTarget"]["robot_key"]), $key));
-      $this->data["CoVomsProvisionerTarget"]["robot_key"] = $robot_key;
+      $stored_key = (!is_null($this->id)) ? $this->field('robot_key', ['id' => $this->id]) : '';
+      if($stored_key !== $this->data["CoVomsProvisionerTarget"]["robot_key"]) {
+        $robot_key = base64_encode(Security::encrypt(base64_decode($this->data["CoVomsProvisionerTarget"]["robot_key"]), $key));
+        $this->data["CoVomsProvisionerTarget"]["robot_key"] = $robot_key;
+      }
     }
   }
 

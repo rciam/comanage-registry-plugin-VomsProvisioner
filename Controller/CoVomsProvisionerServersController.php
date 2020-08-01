@@ -31,9 +31,8 @@ class CoVomsProvisionerServersController extends StandardController
   public function delete($id) {
     $this->log(__METHOD__ . "::@", LOG_DEBUG);
 
-    if( $this->request->is('ajax') && $this->request->is('delete') ) {
+    if( $this->request->is('ajax')) {
       $this->autoRender = false; // We don't render a view in this example
-      $this->request->onlyAllow('ajax'); // No direct access via browser URL
       $id = !empty($id) ? $id : $this->request->data['id'];
       if( $this->CoVomsProvisionerServer->delete($id)) {
         $resp_data = array(
@@ -81,8 +80,8 @@ class CoVomsProvisionerServersController extends StandardController
    */
 
   public function parseCOID($data = null) {
-    if($this->action == 'add' ||
-      $this->action == 'delete') {
+    if($this->action === 'add' ||
+       $this->action === 'delete') {
       if(isset($this->request->params['named']['co'])) {
         return $this->request->params['named']['co'];
       }
@@ -108,6 +107,8 @@ class CoVomsProvisionerServersController extends StandardController
 
     // Determine what operations this user can perform
     $p['delete'] = ($roles['cmadmin'] || $roles['coadmin']);
+    $p['add'] = ($roles['cmadmin'] || $roles['coadmin']);
+    $p['edit'] = ($roles['cmadmin'] || $roles['coadmin']);
     $this->set('permissions', $p);
 
     return($p[$this->action]);

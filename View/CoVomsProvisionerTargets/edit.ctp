@@ -1,11 +1,3 @@
-<link rel="stylesheet" type="text/css" href="<?php print $this->request->webroot . 'voms_provisioner' ?>/css/bootstrap.min.css">
-<link rel="stylesheet" type="text/css" href="<?php print $this->request->webroot . 'voms_provisioner' ?>/css/voms-provisioner.css">
-
-<script src="<?php print $this->request->webroot . 'voms_provisioner' ?>/js/bootstrap.min.js"></script>
-<script src="<?php print $this->request->webroot . 'voms_provisioner' ?>/js/jquery/jquery.base64.js"></script>
-<script src="<?php print $this->request->webroot . 'voms_provisioner' ?>/js/voms_provisioner_target.js"></script>
-<script src="<?php print $this->request->webroot . 'voms_provisioner' ?>/js/server.js"></script>
-
 <?php
   // Get a pointer to our model
   $model = $this->name;
