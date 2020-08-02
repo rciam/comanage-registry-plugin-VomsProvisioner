@@ -74,7 +74,7 @@ $this->Html->script('VomsProvisioner.voms_provisioner_target',  array('inline' =
     function cert_preview(){
       // Load the Modal
       if($('#certPreviewModal').length < 1) {
-        $("body").append(`<?php print $this->element('cert_preview')?>`);
+        $("body").append(`<?php print $this->element('certPreview')?>`);
       }
       $('#certPreviewModal').modal();
     }
@@ -94,7 +94,6 @@ $this->Html->script('VomsProvisioner.voms_provisioner_target',  array('inline' =
                 generateLinkFlash('<?php print _txt("op.voms_provisioner.nohost")?>', "error", 5000);
                 $('#vomsModal').modal('hide');
             }
-            // fixme: Fix the data we are saving if there are no actuall data
             let dn = $('.single-mode').find('#dn').val().trim();
             let protocol = $('.single-mode').find('#protocol-toggler option:selected').val().trim();
             // Get the id of the provisioner target
@@ -179,11 +178,11 @@ $this->Html->script('VomsProvisioner.voms_provisioner_target',  array('inline' =
         const voms_row_id = $closest_li.attr('id');
         // Load the Modal
         if($('#vomsModal').length < 1) {
-            $("body").append(`<?php print $this->element('modal')?>`);
+            $("body").append(`<?php print $this->element('vomsImport')?>`);
         }
         $('#vomsModal').modal('show');
         // Handle the Modal
-        $('#vomsModal h5').hide();
+        $('#vomsModal h4').hide();
         $('.mode-toggler-div').hide();
         $('#voms-server-modal-btn-add').hide();
         $('.modal-title-edit').show();
@@ -330,11 +329,11 @@ $this->Html->script('VomsProvisioner.voms_provisioner_target',  array('inline' =
             // XXX Use ES6 template literal(Template Strings) to load the template
             // Load the Modal
             if($('#vomsModal').length < 1) {
-                $("body").append(`<?php print $this->element('modal')?>`);
+                $("body").append(`<?php print $this->element('vomsImport')?>`);
             }
             $('#vomsModal').modal('show');
             // Handle the Modal
-            $('#vomsModal h5').hide();
+            $('#vomsModal h4').hide();
             $('#voms-server-modal-btn-edit').hide();
             $('.mode-toggler-div').show();
             $('#voms-server-modal-btn-add').show();
@@ -449,7 +448,7 @@ $this->Html->script('VomsProvisioner.voms_provisioner_target',  array('inline' =
       <?php
       $options = array(
         'default' => $co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_cert'],
-        'style'   => 'display:none', // Use display none and not hidden element so that we can change its value and not violate Cakephp Form Tapering security feature
+        'style'   => 'display:none',
         'type'    => 'hidden',
       );
       print $this->Form->input('robot_cert', $options) . "\n";
@@ -485,7 +484,7 @@ $this->Html->script('VomsProvisioner.voms_provisioner_target',  array('inline' =
       <?php
         $options = array(
           'default' => $co_voms_provisioner_targets[0]['CoVomsProvisionerTarget']['robot_key'],
-          'style'   => 'display:none', // Use display none and not hidden element so that we can change its value and not violate Cakephp Form Tapering security feature
+          'style'   => 'display:none',
           'type'    => 'hidden',
         );
         print $this->Form->input('robot_key', $options) . "\n";

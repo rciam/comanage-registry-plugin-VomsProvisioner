@@ -45,6 +45,16 @@ $cm_voms_provisioner_texts['en_US'] = array(
   'pl.voms_provisioner.robot_key.desc'     => 'Key of VOMS robot user with administrator priviledges',
   'pl.voms_provisioner.info'               => 'Define the VOMs where you will push/sync the status of the associated Group/COU',
 
+  // Cert Preview
+  'pl.voms_provisioner.cn'                 => 'Common Name',
+  'pl.voms_provisioner.org'                => 'Organization',
+  'pl.voms_provisioner.cntr'               => 'Country',
+  'pl.voms_provisioner.vlfr'               => 'Valid From',
+  'pl.voms_provisioner.vlto'               => 'Valid To',
+  'pl.voms_provisioner.issuer'             => 'Issuer',
+  'pl.voms_provisioner.sn'                 => 'Serial Number',
+  'pl.voms_provisioner.x509'               => 'Certificate X509',
+
   'fd.voms_provisioner.add'                => 'Add',
   'fd.voms_provisioner.update'             => 'Update',
   'fd.voms_provisioner.load'               => 'Load',
@@ -53,6 +63,7 @@ $cm_voms_provisioner_texts['en_US'] = array(
   'fd.voms_provisioner.cancel'             => 'Cancel',
   'fd.voms_provisioner.del'                => 'Delete',
   'fd.voms_provisioner.save'               => 'Save',
+  'fd.voms_provisioner.close'              => 'Close',
   'fd.voms_provisioner.delall'             => 'Delete all items',
   'fd.voms_provisioner.srv_add'            => 'Add VOMs Server(s)',
   'fd.voms_provisioner.srv_edit'           => 'Edit VOMs Server',

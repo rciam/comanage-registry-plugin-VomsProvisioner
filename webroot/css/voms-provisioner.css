@@ -95,7 +95,7 @@
   background-color: rgba(0, 0, 0, 0.5);
 }
 
-.modal-header h5 {
+.modal-header h4 {
   width: 100%;
   text-align: center;
 }
@@ -118,7 +118,7 @@
   padding: 0.5rem 0;
 }
 
-.cert-preview .row > div:first-child  {
+.cert-preview .row > div:first-child {
   text-align-last: right;
 }
 
@@ -127,13 +127,9 @@
   font-weight: bold;
 }
 
-.serial-number {
-  word-break: break-word;
-}
-
 #certPreviewModal .modal-header .modal-title {
   text-align: center;
-  width:100%;
+  width: auto;
 }
 
 #certPreviewModal .modal-footer button {
@@ -141,7 +137,7 @@
 }
 
 @media only screen and (max-width: 770px) {
-  .cert-preview .row > div:first-child  {
+  .cert-preview .row > div:first-child {
     text-align-last: left;
   }
 }
