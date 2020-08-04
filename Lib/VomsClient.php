@@ -364,19 +364,19 @@ class VomsClient {
   }
 
   /**
-   * @param string $voname            The VO under which we will create the new Group
-   * @param string $groupName         Name of the Group we want to create
-   * @param string $groupDescription  A short description for the Group
+   * @param string $voname The VO under which we will create the new Group
+   * @param array  $groupNames Name of the Groups from parent to child
+   * @param string $groupDescription A short description for the Group
    * @return array Response
    * @throws \GuzzleHttp\Exception\GuzzleException
    * @todo think on how to implement subgroups
    */
-  public function createGroup($voname, $groupName, $groupDescription='') {
-    if(empty($groupName)) {
+  public function createGroup($voname, $groupNames, $groupDescription='') {
+    if(empty($groupNames)) {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
-      'groupName' => '/' . $voname . '/' . $groupName,
+      'groupName' => '/' . $voname . '/' . implode('/', $groupNames),
     ];
     if(!empty($groupDescription)) {
       $post_fields['groupDescription'] = $groupDescription;
