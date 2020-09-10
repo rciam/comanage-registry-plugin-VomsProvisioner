@@ -7,6 +7,7 @@ CREATE TABLE cm_co_voms_provisioner_targets
     vo                            varchar(96),
     robot_cert                    text,
     robot_key                     text,
+    openssl_syntax                boolean,
     created                       timestamp without time zone,
     modified                      timestamp without time zone
 );
