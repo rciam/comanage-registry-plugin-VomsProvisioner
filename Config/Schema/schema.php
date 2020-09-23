@@ -12,13 +12,13 @@ class AppSchema extends CakeSchema
     if (isset($event['create'])) {
       switch ($event['create']) {
         case 'co_voms_provisioner_targets':
-          $VomsProvisioner = ClassRegistry::init('VomsProvisioner.VomsProvisionerTarget');
+          $VomsProvisioner = ClassRegistry::init('VomsProvisioner.CoVomsProvisionerTarget');
           $VomsProvisioner->useDbConfig = $this->connection;
           // Add the constraints or any other initializations
-          $VomsProvisioner->query("ALTER TABLE ONLY public.cm_co_voms_provisioner_targets ADD CONSTRAINT cm_o_voms_provisioner_targets_co_provisioning_target_id_fkey FOREIGN KEY (co_provisioning_target_id) REFERENCES public.cm_co_provisioning_targets(id)");
+          $VomsProvisioner->query("ALTER TABLE ONLY public.cm_co_voms_provisioner_targets ADD CONSTRAINT cm_co_voms_provisioner_targets_co_provisioning_target_id_fkey FOREIGN KEY (co_provisioning_target_id) REFERENCES public.cm_co_provisioning_targets(id)");
           break;
         case 'co_voms_provisioner_servers':
-          $VomsProvisioner = ClassRegistry::init('VomsProvisioner.VomsProvisionerServer');
+          $VomsProvisioner = ClassRegistry::init('VomsProvisioner.CoVomsProvisionerServer');
           $VomsProvisioner->useDbConfig = $this->connection;
           // Add the constraints or any other initializations
           $VomsProvisioner->query("ALTER TABLE ONLY public.cm_co_voms_provisioner_servers ADD CONSTRAINT cm_co_voms_provisioner_servers_co_voms_provisioner_target_id_fkey FOREIGN KEY (co_voms_provisioner_target_id) REFERENCES public.cm_co_voms_provisioner_targets (id);");
