@@ -156,11 +156,13 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
 
     // XXX Now perform an action
 
-    // The CO Person is not part of the COU
+    // The CO Person MUST BE DELETED/REMOVED from the VO
     if((empty($user_cou_related_profile["CoPersonRole"])
-        && ($modify || $voremove))
+        && ($modify || $voremove))                                                                              // Removed from COU/VO
             || ( !empty($user_cou_related_profile["CoPersonRole"])
-                  && $user_cou_related_profile["CoPersonRole"][0]["status"] === StatusEnum::Expired)) {
+                  && ($user_cou_related_profile["CoPersonRole"][0]["status"] === StatusEnum::Expired            // COU/VO Expired
+                      || $user_cou_related_profile["CoPersonRole"][0]["status"] === StatusEnum::Suspended       // COU/VO Suspended
+                      || $user_cou_related_profile["CoPerson"]["status"] === StatusEnum::Suspended))) {         // COPerson Suspended
       // fixme: How to do i know the $dn and $ca that the user used to register
       $response = $this->_voms_client->deleteUser($user_cou_related_profile['Cert'][0]['Cert']['subject'],
                                                   $user_cou_related_profile['Cert'][0]['Cert']['issuer']);

@@ -1,5 +1,5 @@
 # comanage-registry-plugin-VomsProvisioner
-This is [COmanage Provisioner plugin](https://spaces.at.internet2.edu/display/COmanage/Provisioning+From+Registry) that will push CO Person changes into VOMS. The plugin is compatible with both VOMS SOAP and REST API.
+This is [COmanage Provisioner plugin](https://spaces.at.internet2.edu/display/COmanage/Provisioning+From+Registry) that will push CO Person changes into VOMS. The plugin is compatible with both VOMS SOAP and REST API. Also it premises that the handled VOs are mapped/modeled as COU entities in COmanage.
 
 ## Installation
 1. Run `git clone https://github.com/rciam/comanage-registry-plugin-VomsProvisioner.git /path/to/comanage/local/Plugin/VomsProvisioner`

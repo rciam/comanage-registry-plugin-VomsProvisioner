@@ -13,7 +13,7 @@ class OpenSslNameUtils {
    */
 
   public static function normalizeLabel($label) {
-    if(isset(OpenSslNameUtilsEnum::normalized_labels[strtolower($label)])) {
+    if(!empty(OpenSslNameUtilsEnum::normalized_labels[strtolower($label)])) {
       $normalized = OpenSslNameUtilsEnum::normalized_labels[strtolower($label)];
     }
     return (empty($normalized) ? $label : $normalized);
