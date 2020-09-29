@@ -1,56 +1,37 @@
 # comanage-registry-plugin-VomsProvisioner
-VOMS admin Client
+This is [COmanage Provisioner plugin](https://spaces.at.internet2.edu/display/COmanage/Provisioning+From+Registry) that will push CO Person changes into VOMS. The plugin is compatible with both VOMS SOAP and REST API.
 
+## Installation
+1. Run `git clone https://github.com/rciam/comanage-registry-plugin-VomsProvisioner.git /path/to/comanage/local/Plugin/VomsProvisioner`
+2. Run `cd /path/to/comanage/app`
+3. Run `Console/clearcache`
+4. Run `Console/cake schema create --file schema.php --path /path/to/comanage/local/Plugin/VomsProvisioner/Config/Schema`
 
-## Known limitations
-- If you Add a User in VOMS and immediately try to remove, VOMS will crash(you need to wait for until one minute to pass)
-  - If you perform the same action through SOAP then it will not crash but will remove only the Certificate and leave the user behind
-- If you Add a User in VOMS only with cn, ca, dn, email then the CN parameter will never be added to the user
-- Create Group with description invokes Rest API which will fail
-  - Error Message:
+## Schema update
+Not yet implemented
 
-## Installation Instructions
-- Delete the foreign Key in the cm_vos table
-- Remove all references of the Vo Model in around the project
-- Remove all configured instances of the plugin
-- Alter the table in the database
+## Configuration
+1. [Add a Provisioning Target](https://spaces.at.internet2.edu/display/COmanage/Provisioning+From+Registry#ProvisioningFromRegistry-AddingaProvisioningTarget) of type VomsProvisioner
+2. Configure the provisioner
+   * Add VOMS server
+   * Load the Certificate Registered in VOMS
+   * Load the Private Key paired with the Certificate loaded above
+     * Key and Ceritificate must be associated with an Administrator user in VOMS
+   * Enable/Disable OpenSSL syntax. Default to RFC2253 syntax (**experimental**)
+![VOMS Provisioner Configuration](Documentation/images/voms_provisioner_configuration.png)
+## Compatibility matrix
 
-Phase I
-```sql
-alter table cm_co_voms_provisioner_targets rename column server_url to host;
-alter table cm_co_voms_provisioner_targets alter column host type varchar(256);
-alter table cm_co_voms_provisioner_targets rename column vo_name to vo;
-alter table cm_co_voms_provisioner_targets alter column vo type varchar(96);
-alter table cm_co_voms_provisioner_targets rename column entity_type to robot_cert;
-alter table cm_co_voms_provisioner_targets alter column robot_cert type text;
-alter table cm_co_voms_provisioner_targets add column robot_key text;
-alter table cm_co_voms_provisioner_targets add column port integer;
-```
+This table matches the Plugin version with the supported COmanage version.
 
-Phase II
-```sql
-alter table cm_co_voms_provisioner_targets drop column port;
-alter table cm_co_voms_provisioner_targets drop column host;
+| Plugin |  COmanage |    PHP    |  VOMS  |
+|:------:|:---------:|:---------:|:------:|
+| v0.1.0 | v3.1.x    | &gt;=v5.6 |  3.7.0 |
 
--- COManage must be able to read and write on the cm_co_voms_provisioner_servers table 
-CREATE TABLE cm_co_voms_provisioner_servers
-(
-    id                            serial PRIMARY KEY,
-    co_voms_provisioner_target_id integer NOT NULL,
-    host                          varchar(256),
-    port                          integer,
-    dn                            varchar(256),
-    created                       timestamp without time zone,
-    modified                      timestamp without time zone
-);
+## Limitations
+* Suspend User is not working through the API. As a workaround the plugin removes the user in case of a request for suspend.
+* Remove Certificate is not working through the API (No workaround)
+* Remove Attribute Class is not working through the API (No workaround)
 
--- Add Foreign Key constraints
-ALTER TABLE ONLY public.cm_co_voms_provisioner_servers
-    ADD CONSTRAINT cm_co_voms_provisioner_servers_co_voms_provisioner_target_id_fkey FOREIGN KEY (co_voms_provisioner_target_id) REFERENCES public.cm_co_voms_provisioner_targets (id);
+## License
 
-```
-
-Phase III
-```sql
-alter table cm_co_voms_provisioner_servers add column protocol varchar(5);
-```
+Licensed under the Apache 2.0 license, for details see [LICENSE](https://github.com/rciam/comanage-registry-plugin-VomsProvisioner/blob/master/LICENSE).
