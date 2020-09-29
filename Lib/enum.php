@@ -1,6 +1,7 @@
 <?php
 
-class VomsRestActionsEnum {
+class VomsRestActionsEnum
+{
   const CREATE_USER = 'create-user.action';
   const CREATE_GROUP = 'create-group.action';
   const GET_EXPIRED_USERS = 'expired-users.action';
@@ -20,13 +21,15 @@ class VomsRestActionsEnum {
   );
 }
 
-class VomsClientEnum {
+class VomsClientEnum
+{
   const API_ENPOINT = 'apiv2';
   const REST_LOCATION = 'voms';
   const CSRF_GUARD = 'X-voms-csrf-guard';
 }
 
-class VomsServerConfigEnum {
+class VomsServerConfigEnum
+{
   const BULK = 'B';
   const SINGLE = 'S';
   const type = array(
@@ -35,7 +38,8 @@ class VomsServerConfigEnum {
   );
 }
 
-class VomsServerHttpProtocolEnum {
+class VomsServerHttpProtocolEnum
+{
   const HTTP = 'http';
   const HTTPS = 'https';
   const type = array(
@@ -44,7 +48,8 @@ class VomsServerHttpProtocolEnum {
   );
 }
 
-class VomsServerImportModeEnum {
+class VomsServerImportModeEnum
+{
   const APPEND = 'A';
   const OVERWRITE = 'O';
   const type = array(
@@ -53,13 +58,15 @@ class VomsServerImportModeEnum {
   );
 }
 
-class VomsSoapServicesEnum {
+class VomsSoapServicesEnum
+{
   const VOMS_CERTIFICATES = 'VOMSCertificates';
   const VOMS_ADMIN = 'VOMSAdmin';
   const VOMS_ATTRIBUTES = 'VOMSAttributes';
 }
 
-class VomsSoapNamespaceEnum {
+class VomsSoapNamespaceEnum
+{
   const VOMS_ADMIN_NAMESPACE = 'http://glite.org/wsdl/services/org.glite.security.voms.service.admin';
   const VOMS_CERTIFICATES_NAMESPACE = 'http://glite.org/wsdl/services/org.glite.security.voms.service.certificates';
   const VOMS_ATTRIBUTES_NAMESPACE = 'http://glite.org/wsdl/services/org.glite.security.voms.service.attributes';
@@ -91,7 +98,8 @@ class VomsSoapNamespaceEnum {
   );
 }
 
-class VomsSoapActionsEnum {
+class VomsSoapActionsEnum
+{
   const ADD_CERTIFICATE = 'addCertificate';
   const GET_CERTIFICATES = 'getCertificates';
   const SUSPEND_CERTIFICATE = 'suspendCertificate';
@@ -141,5 +149,24 @@ class VomsSoapActionsEnum {
     VomsSoapActionsEnum::SET_USER_ATTRIBUTE => VomsSoapServicesEnum::VOMS_ATTRIBUTES,
     VomsSoapActionsEnum::DELETE_USER_ATTRIBUTE => VomsSoapServicesEnum::VOMS_ATTRIBUTES,
     VomsSoapActionsEnum::LIST_USER_ATTRIBUTES => VomsSoapServicesEnum::VOMS_ATTRIBUTES
+  );
+}
+
+class OpenSslNameUtilsEnum
+{
+  const normalized_labels = array(
+    'e' => 'emailAddress',
+    'email' => 'emailAddress',
+    'userid' => 'UID',
+    'sn' => 'serialnumber',
+    'surname' => 'sn',
+    'givenname' => 'gn',
+    'dn' => 'dnQualifier',
+    'dnq' => 'dnQualifier',
+    'uniqueidentifier' => 'x500UniqueIdentifier',
+    'generation' => 'generationQualifier',
+    's' => 'ST',
+    'ip' => '1.3.6.1.4.1.42.2.11.2.1',
+    'nameatbirth' => '1.3.36.8.3.14'
   );
 }

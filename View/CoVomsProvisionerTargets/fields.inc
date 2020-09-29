@@ -491,6 +491,27 @@ $this->Html->script('VomsProvisioner.voms_provisioner_target',  array('inline' =
       ?>
     </div>
   </li>
+   <li>
+    <div class="field-name">
+        <div class="field-title">
+          <?php print _txt('pl.voms_provisioner.openssl_syntax'); ?>      
+        </div>
+        <div class="field-desc"><?php print _txt('pl.voms_provisioner.openssl_syntax.desc'); ?></div>
+      </div>
+      <div class="field-info">
+      <?php
+        if($e) {
+          $isChecked = (isset($co_voms_provisioner_targets) ? $co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['openssl_syntax'] : FALSE);
+          print $this->Form->checkbox('openssl_syntax', array('checked' => $isChecked));
+          if($this->Form->isFieldError('openssl_syntax')) {
+            print $this->Form->error('openssl_syntax');
+          }
+        } else {
+          print $co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['openssl_syntax'];
+        }
+      ?>
+      </div>
+    </li>
   <?php if($e): ?>
     <li class="fields-submit">
       <div class="field-name">

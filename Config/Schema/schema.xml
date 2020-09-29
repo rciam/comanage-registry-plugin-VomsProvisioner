@@ -35,9 +35,9 @@
     <field name="vo" type="C" size="96" />
     <field name="robot_cert" type="X" />
     <field name="robot_key" type="X" />
+    <field name="openssl_syntax" type="L" />
     <field name="created" type="T" />
-    <field name="modified" type="T" />
-    
+    <field name="modified" type="T" />   
     <index name="co_voms_provisioner_targets_i1">
       <col>co_provisioning_target_id</col>
       <unique />

@@ -78,6 +78,11 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       'rule' => 'notBlank',
       'required' => true,
       'allowEmpty' => false
+    ),
+    'openssl_syntax' => array(
+      'rule' => array('boolean'),
+      'required' => false,
+      'allowEmpty' => true
     )
   );
 
@@ -319,9 +324,9 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
    * @param string $robot_key
    * @return Object VomsClient
    */
-  protected function getVomsClient($protocol, $host, $port, $vo_name, $robot_cert, $robot_key) {
+  protected function getVomsClient($protocol, $host, $port, $vo_name, $robot_cert, $robot_key, $openssl_syntax) {
     if(is_null($this->_voms_client)) {
-      $this->_voms_client = new VomsClient($protocol, $host, $port, $vo_name, $robot_cert, $robot_key);
+      $this->_voms_client = new VomsClient($protocol, $host, $port, $vo_name, $robot_cert, $robot_key, $openssl_syntax);
     }
     return $this->_voms_client;
   }
@@ -458,7 +463,8 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
         $server["port"],
         $coProvisioningTargetData["CoVomsProvisionerTarget"]['vo'],
         $robot_cert,
-        $robot_key);
+        $robot_key,
+        $coProvisioningTargetData["CoVomsProvisionerTarget"]['openssl_syntax']);
       if(!is_null($voms_client)) {
         $response = $voms_client->getUserStats();
         if($response["status_code"] === 200) {

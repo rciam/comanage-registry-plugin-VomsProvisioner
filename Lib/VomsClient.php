@@ -2,7 +2,7 @@
 //include_once 'VomsRestClient.php';
 //include_once 'VomsSoapClient.php';
 //include_once 'enum.php';
-
+//include_once 'OpenSslNameUtils.php';
 class VomsClient {
   private $protocol = null;
   private $host = null;
@@ -12,15 +12,17 @@ class VomsClient {
   private $robot_key = null;
   private $rest_client = null;
   private $soap_client = null;
+  private $openssl_syntax = null;
   private $_config = array();
 
-  public function __construct($protocol, $host, $port, $vo_name, $robot_cert, $robot_key) {
+  public function __construct($protocol, $host, $port, $vo_name, $robot_cert, $robot_key, $openssl_syntax) {
     $this->protocol = $protocol;
     $this->host = $host;
     $this->port = $port;
     $this->vo_name = $vo_name;
     $this->robot_cert = $robot_cert;
     $this->robot_key = $robot_key;
+    $this->openssl_syntax = $openssl_syntax;
     $this->_config = [
       $this->protocol,
       $this->host,
@@ -28,6 +30,7 @@ class VomsClient {
       $this->vo_name,
       $this->robot_cert,
       $this->robot_key,
+      $this->openssl_syntax
     ];
   }
 
@@ -77,7 +80,22 @@ class VomsClient {
     if(empty($user_data['user'])) {
       // todo: Use the soap client
     }
+    //Convert subjectDN to openSSL syntax
+    $user_data['certificateSubject'] = $this->createCertificateSubject($user_data['certificateSubject']);
     return $this->restClient()->vomsRequest(VomsRestActionsEnum::CREATE_USER, $user_data);
+  }
+  
+  /**
+   * createCertificateSubject
+   *
+   * @param  string $certificate_subject
+   * @return string
+   */
+  public function createCertificateSubject($certificate_subject) {
+    if($this->openssl_syntax) {
+      return OpenSslNameUtils::convertfromRfc2253($certificate_subject);
+    }
+    return $certificate_subject;
   }
 
   /**
@@ -91,7 +109,7 @@ class VomsClient {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
-      'certificateSubject' => $dn,
+      'certificateSubject' => $this->createCertificateSubject($dn),
       'caSubject' => $ca,
     ];
     return $this->soapClient()->vomsRequest(VomsSoapActionsEnum::DELETE_USER, $post_fields, false);
@@ -108,7 +126,7 @@ class VomsClient {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
-      'certificateSubject' => $dn,
+      'certificateSubject' => $this->createCertificateSubject($dn),
       'caSubject' => $ca,
     ];
     return $this->soapClient()->vomsRequest(VomsSoapActionsEnum::GET_USER, $post_fields, false);
@@ -144,7 +162,7 @@ class VomsClient {
     $post_fields = [
       'group' => $groupName,
       'role' => $roleName,
-      'certificateSubject' => $dn,
+      'certificateSubject' => $this->createCertificateSubject($dn),
       'caSubject' => $ca,
     ];
     return $this->soapClient()->vomsRequest(VomsSoapActionsEnum::ASSIGN_ROLE, $post_fields, false);
@@ -165,7 +183,7 @@ class VomsClient {
     $post_fields = [
       'group' => $groupName,
       'role' => $roleName,
-      'certificateSubject' => $dn,
+      'certificateSubject' => $this->createCertificateSubject($dn),
       'caSubject' => $ca,
     ];
     return $this->soapClient()->vomsRequest(VomsSoapActionsEnum::DISMISS_ROLE, $post_fields, false);
@@ -182,7 +200,7 @@ class VomsClient {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
-      'certificateSubject' => $dn,
+      'certificateSubject' => $this->createCertificateSubject($dn),
       'caSubject' => $ca,
     ];
     return $this->soapClient()->vomsRequest(VomsSoapActionsEnum::GET_CERTIFICATES, $post_fields, false);
@@ -203,7 +221,7 @@ class VomsClient {
     $post_fields = [
       'regCertificateSubject' => $regdn,
       'regCaSubject' => $regca,
-      'certificateSubject' => $dn,
+      'certificateSubject' => $this->createCertificateSubject($dn),
       'caSubject' => $ca,
     ];
     return $this->soapClient()->vomsRequest(VomsSoapActionsEnum::ADD_CERTIFICATE, $post_fields, false);
@@ -221,7 +239,7 @@ class VomsClient {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
-      'certificateSubject' => $dn,
+      'certificateSubject' => $this->createCertificateSubject($dn),
       'caSubject' => $ca,
       'reason' => $reason,
     ];
@@ -239,7 +257,7 @@ class VomsClient {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
-      'certificateSubject' => $dn,
+      'certificateSubject' => $this->createCertificateSubject($dn),
       'caSubject' => $ca,
     ];
     return $this->soapClient()->vomsRequest(VomsSoapActionsEnum::REMOVE_CERTIFICATE, $post_fields, false);
@@ -256,7 +274,7 @@ class VomsClient {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
-      'certificateSubject' => $dn,
+      'certificateSubject' => $this->createCertificateSubject($dn),
       'caSubject' => $ca,
     ];
     return $this->soapClient()->vomsRequest(VomsSoapActionsEnum::RESTORE_CERTIFICATE, $post_fields, false);
@@ -319,7 +337,7 @@ class VomsClient {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
-      'certificateSubject' => $dn,
+      'certificateSubject' => $this->createCertificateSubject($dn),
       'caSubject' => $ca,
       'name' => $name,
       'value' => $value,
@@ -339,7 +357,7 @@ class VomsClient {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
-      'certificateSubject' => $dn,
+      'certificateSubject' => $this->createCertificateSubject($dn),
       'caSubject' => $ca,
       'name' => $name,
     ];
@@ -357,7 +375,7 @@ class VomsClient {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
-      'certificateSubject' => $dn,
+      'certificateSubject' => $this->createCertificateSubject($dn),
       'caSubject' => $ca,
     ];
     return $this->soapClient()->vomsRequest(VomsSoapActionsEnum::LIST_ATTRIBUTE_CLASSES, $post_fields, false);
@@ -413,7 +431,7 @@ class VomsClient {
     }
     $post_fields = [
       'groupName' => $groupName,
-      'certificateSubject' => $dn,
+      'certificateSubject' => $this->createCertificateSubject($dn),
       'caSubject' => $ca,
     ];
     return $this->soapClient()->vomsRequest(VomsSoapActionsEnum::ADD_MEMBER, $post_fields, false);
@@ -432,7 +450,7 @@ class VomsClient {
     }
     $post_fields = [
       'groupName' => $groupName,
-      'certificateSubject' => $dn,
+      'certificateSubject' => $this->createCertificateSubject($dn),
       'caSubject' => $ca,
     ];
     return $this->soapClient()->vomsRequest(VomsSoapActionsEnum::REMOVE_MEMBER, $post_fields, false);
@@ -464,7 +482,7 @@ class VomsClient {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
-      'certificateSubject' => $dn,
+      'certificateSubject' => $this->createCertificateSubject($dn),
       'caSubject' => $ca,
     ];
     return $this->soapClient()->vomsRequest(VomsSoapActionsEnum::LIST_USER_GROUPS, $post_fields, false);
@@ -490,7 +508,7 @@ class VomsClient {
       throw new NotFoundException(_txt('op.voms_provisioner.nocert'));
     }
     $post_fields = [
-      'certificateSubject' => $dn,
+      'certificateSubject' => $this->createCertificateSubject($dn),
       'caSubject' => $ca,
       'suspensionReason' => 'Reason=' . $reason,
     ];

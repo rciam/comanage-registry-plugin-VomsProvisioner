@@ -5,3 +5,4 @@ require_once LOCAL . DS . 'Plugin' . DS . 'VomsProvisioner' . DS . 'Lib' . DS . 
 require_once LOCAL . DS . 'Plugin' . DS . 'VomsProvisioner' . DS . 'Lib' . DS . 'VomsRestClient.php';
 require_once LOCAL . DS . 'Plugin' . DS . 'VomsProvisioner' . DS . 'Lib' . DS . 'VomsSoapClient.php';
 require_once LOCAL . DS . 'Plugin' . DS . 'VomsProvisioner' . DS . 'Lib' . DS . 'VomsClient.php';
+require_once LOCAL . DS . 'Plugin' . DS . 'VomsProvisioner' . DS . 'Lib' . DS . 'OpenSslNameUtils.php';
