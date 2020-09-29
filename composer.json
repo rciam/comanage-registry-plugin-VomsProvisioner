@@ -18,7 +18,7 @@
   "repositories": [
     {
       "type": "vcs",
-      "url": "https://github.com/ioigoume/comanage-registry-plugin-VomsProvisioner"
+      "url": "https://github.com/rciam/comanage-registry-plugin-VomsProvisioner"
     }
   ],
   "require": {
