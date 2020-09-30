@@ -103,9 +103,6 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     $this->log(__METHOD__ . "::@", LOG_DEBUG);
     $this->log(__METHOD__ . "::action => ".$op, LOG_DEBUG);
 
-    // Get all the linked tables of my Provisioner
-    $coProvisioningTargetData = $this->getFullStructure($coProvisioningTargetData["CoVomsProvisionerTarget"]["id"]);
-
     // First figure out what to do
     $voremove = false;
     $voadd =false;
@@ -137,6 +134,18 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       return true;
     }
 
+    // Get all the linked tables of my Provisioner
+    $coProvisioningTargetData = $this->getFullStructure($coProvisioningTargetData["CoVomsProvisionerTarget"]["id"]);
+
+    // XXX For COU Actions allow only the ones matching the COU name in the configuration of the provisioner
+    // XXX For CO Person Actions skip
+    if(empty($_REQUEST["data"]["CoPerson"])) {
+      $cou_name_frm_request = $this->getCouNameFromRequest();
+      if($coProvisioningTargetData["CoVomsProvisionerTarget"]["vo"] !== $cou_name_frm_request) {
+        return true;
+      }
+    }
+
     // Get first VOMS Alive
     $this->_voms_client = $this->getFirstVomsAlive($coProvisioningTargetData, $coProvisioningTargetData["CoVomsProvisionerServer"]);
     if(is_null($this->_voms_client)) {
@@ -150,6 +159,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     // XXX In order to perform any action we need at least on valid certificate. If none is provided then
     // XXX throw an error
     if(empty($user_cou_related_profile['Cert'])) {
+      $this->log(__METHOD__ . '::No valid certificate. Aborting provisioning.', LOG_DEBUG);
       // fixme: Even though i am throwing an exception this is not working
       throw new RuntimeException(_txt('op.voms_provisioner.nocert'));
     }
@@ -176,7 +186,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     // The user is in the COU
     if(!empty($user_cou_related_profile["CoPersonRole"])) {
       if($modify && $user_cou_related_profile["CoPersonRole"][0]["status"] === StatusEnum::Suspended) {
-          // XXX I will translate this as suspended action
+          // todo: I will translate this as suspended action
           return true;
       }
       // XXX add user into VOMS
@@ -476,5 +486,32 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
         $voms_client = null;
       }
     }
+  }
+
+  /**
+   * This provisioner refer only to COU entities. As a result if no COU is present we should skip the plugin
+   * @return string COU name if exists, empty string otherwise
+   */
+  private function getCouNameFromRequest() {
+    if(!empty($_REQUEST["data"]["CoPersonRole"]["cou_id"])) { // Post Actions
+      $this->Cou = ClassRegistry::init('Cou');
+      return $this->Cou->field('name', array('id' => $_REQUEST["data"]["CoPersonRole"]["cou_id"]));
+    } elseif(is_array($_REQUEST)) {                           // Delete Actions
+      $request = array_keys($_REQUEST);
+      $req_path = explode('/', $request[0]);
+      $co_person_role_id = end($req_path);
+      $args = array();
+      $args['joins'][0]['table'] = 'cous';
+      $args['joins'][0]['alias'] = 'Cou';
+      $args['joins'][0]['type'] = 'INNER';
+      $args['joins'][0]['conditions'] = 'Cou.id=CoPersonRole.cou_id';
+      $args['conditions']['CoPersonRole.id'] = $co_person_role_id;
+      $args['contain'] = false;
+      $args['fields'] = array('Cou.name');
+      $this->CoPersonRole = ClassRegistry::init('CoPersonRole');
+      $ret = $this->CoPersonRole->find('first',$args);
+      return $ret["Cou"]["name"];
+    }
+    return '';
   }
 }
