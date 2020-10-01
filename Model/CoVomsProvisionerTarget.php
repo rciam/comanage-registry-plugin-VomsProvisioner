@@ -168,11 +168,12 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
 
     // The CO Person MUST BE DELETED/REMOVED from the VO
     if((empty($user_cou_related_profile["CoPersonRole"])
-        && ($modify || $voremove))                                                                              // Removed from COU/VO
+        && ($modify || $voremove))                                                                             // Removed from COU/VO
             || ( !empty($user_cou_related_profile["CoPersonRole"])
-                  && ($user_cou_related_profile["CoPersonRole"][0]["status"] === StatusEnum::Expired            // COU/VO Expired
-                      || $user_cou_related_profile["CoPersonRole"][0]["status"] === StatusEnum::Suspended       // COU/VO Suspended
-                      || $user_cou_related_profile["CoPerson"]["status"] === StatusEnum::Suspended))) {         // COPerson Suspended
+                  && ( ($user_cou_related_profile["CoPersonRole"][0]["status"] !== StatusEnum::Active                // COU/VO Active
+                        && $user_cou_related_profile["CoPersonRole"][0]["status"] !== StatusEnum::GracePeriod)       // COU/VO GracePeriod
+                        || ($user_cou_related_profile["CoPerson"]["status"] !== StatusEnum::Active                   // COPerson Active
+                            && $user_cou_related_profile["CoPerson"]["status"] !== StatusEnum::GracePeriod)))) {     // COPerson GracePerio
       // fixme: How to do i know the $dn and $ca that the user used to register
       $response = $this->_voms_client->deleteUser($user_cou_related_profile['Cert'][0]['Cert']['subject'],
                                                   $user_cou_related_profile['Cert'][0]['Cert']['issuer']);
@@ -499,6 +500,11 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     } elseif(is_array($_REQUEST)) {                           // Delete Actions
       $request = array_keys($_REQUEST);
       $req_path = explode('/', $request[0]);
+      $req_path = array_filter($req_path); // removing blank, null, false, 0 (zero) values
+      // XXX We only want to move forward if this refers to CoPersonRole or CoPerson(?)
+      if(!in_array('co_person_roles', $req_path)) {
+        return '';
+      }
       $co_person_role_id = end($req_path);
       $args = array();
       $args['joins'][0]['table'] = 'cous';
