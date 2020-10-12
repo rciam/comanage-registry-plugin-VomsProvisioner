@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [0.1.4] - 2020-10-12
+### Fixed
+- Unhandled group membership with no COU id during provisioning
+- Use Robot CA as the default CA if User's Personal Certificate has no CA
+
 ## [0.1.3] - 2020-10-02
 ### Fixed
 - Flow broke if CO Person profile updated fields other than CO Person Role and Status

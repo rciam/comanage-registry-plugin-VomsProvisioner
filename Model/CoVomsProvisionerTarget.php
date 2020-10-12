@@ -163,6 +163,12 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       // fixme: Even though i am throwing an exception this is not working
       throw new RuntimeException(_txt('op.voms_provisioner.nocert'));
     }
+    // XXX Get the first one and do the action needed
+    // fixme: Make the Robot CA configuration
+    // fixme: I should only do this with Personal Certificates but i do not have this information in the Model
+    if(empty($user_cou_related_profile['Cert'][0]['Cert']['issuer'])) {
+      $user_cou_related_profile['Cert'][0]['Cert']['issuer'] = "/C=NL/O=GEANT Vereniging/CN=GEANT eScience Personal CA 4";
+    }
 
     // XXX Now perform an action
 
@@ -226,8 +232,8 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     if(!empty($in_group)){
       $index = explode('.', $in_group, 2)[0];
       $user_membership_status = $provisioningData['CoGroupMember'][$index];
-      // XXX Do not set the cou_id unless you are certain of it value
-      $cou_id = $user_membership_status["CoGroup"]["cou_id"];
+      // XXX Do not set the cou_id unless you are certain of its value
+      $cou_id = !empty($user_membership_status["CoGroup"]["cou_id"]) ? $user_membership_status["CoGroup"]["cou_id"] : null;
     }
 
     // Create the profile of the user according to the group_id and cou_id of the provisioned
