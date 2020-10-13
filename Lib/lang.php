@@ -44,7 +44,9 @@ $cm_voms_provisioner_texts['en_US'] = array(
   'pl.voms_provisioner.robot_key'           => 'Robot Key',
   'pl.voms_provisioner.robot_key.desc'      => 'Key of VOMS robot user with administrator priviledges',
   'pl.voms_provisioner.openssl_syntax'      => 'Openssl Syntax',
-  'pl.voms_provisioner.openssl_syntax.desc' => 'Define if you want Openssl syntax',
+  'pl.voms_provisioner.openssl_syntax.desc' => 'Enable Openssl syntax',
+  'pl.voms_provisioner.ca_dn_default'       => 'Certificate Authority DN',
+  'pl.voms_provisioner.ca_dn_default.desc'  => 'Provide the default DN of the CA in case not available in User\'s Certificate.<br><b>Suggestion:</b> Use the Subject DN of the Actor.',
   'pl.voms_provisioner.info'                => 'Define the VOMs where you will push/sync the status of the associated Group/COU',
 
   // Cert Preview

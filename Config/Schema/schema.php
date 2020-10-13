@@ -34,6 +34,7 @@ class AppSchema extends CakeSchema
     'robot_cert' => array('type' => 'string', 'null' => true, 'length' => 6000),
     'robot_key' => array('type' => 'string', 'null' => true, 'length' => 6000),
     'openssl_syntax' => array('type' => 'boolean', 'null' => true),
+    'ca_dn_default' => array('type' => 'string', 'null' => true, 'length' => 512),
     'created' => array('type' => 'datetime', 'null' => true),
     'modified' => array('type' => 'datetime', 'null' => true),
     'indexes' => array(

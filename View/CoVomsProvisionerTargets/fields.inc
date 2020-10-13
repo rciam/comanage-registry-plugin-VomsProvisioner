@@ -512,6 +512,29 @@ $this->Html->script('VomsProvisioner.voms_provisioner_target',  array('inline' =
       ?>
       </div>
     </li>
+  <li>
+    <div class="field-name">
+      <div class="field-title">
+        <?php print _txt('pl.voms_provisioner.ca_dn_default'); ?>
+      </div>
+      <div class="field-desc"><?php print _txt('pl.voms_provisioner.ca_dn_default.desc'); ?></div>
+    </div>
+    <div class="field-info checkbox">
+      <?php
+      if($e) {
+        $default = empty($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['ca_dn_default'])
+                   ? ''
+                   : filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['ca_dn_default'],FILTER_SANITIZE_SPECIAL_CHARS);
+        print $this->Form->input('ca_dn_default', array('default' => $default));
+        if($this->Form->isFieldError('ca_dn_default')) {
+          print $this->Form->error('ca_dn_default');
+        }
+      } else {
+        print filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['ca_dn_default'],FILTER_SANITIZE_SPECIAL_CHARS);
+      }
+      ?>
+    </div>
+  </li>
   <?php if($e): ?>
     <li class="fields-submit">
       <div class="field-name">

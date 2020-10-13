@@ -83,7 +83,12 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       'rule' => array('boolean'),
       'required' => false,
       'allowEmpty' => true
-    )
+    ),
+    'ca_dn_default' => array(
+      'rule' => '/.*/',
+      'required' => false,
+      'allowEmpty' => true
+    ),
   );
 
   /**
@@ -167,7 +172,11 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     // fixme: Make the Robot CA configuration
     // fixme: I should only do this with Personal Certificates but i do not have this information in the Model
     if(empty($user_cou_related_profile['Cert'][0]['Cert']['issuer'])) {
-      $user_cou_related_profile['Cert'][0]['Cert']['issuer'] = "/C=NL/O=GEANT Vereniging/CN=GEANT eScience Personal CA 4";
+      if (empty($coProvisioningTargetData["CoVomsProvisionerTarget"]["ca_dn_default"])) {
+        // XXX No default DN, break Provisioning
+        return;
+      }
+      $user_cou_related_profile['Cert'][0]['Cert']['issuer'] = $coProvisioningTargetData["CoVomsProvisionerTarget"]["ca_dn_default"];
     }
 
     // XXX Now perform an action

@@ -18,14 +18,16 @@ Not yet implemented
    * Load the Private Key paired with the Certificate loaded above
      * Key and Ceritificate must be associated with an Administrator user in VOMS
    * Enable/Disable OpenSSL syntax. Default to RFC2253 syntax (**experimental**)
-![VOMS Provisioner Configuration](Documentation/images/voms_provisioner_configuration.png)
+   * Provide the Subject DN of the Actor(Robot User), in case User's Certificate has no DN for the Certificate Authority
+![VOMS Provisioner Configuration](Documentation/images/voms_provisioner_configuration_v2.png)
 ## Compatibility matrix
 
 This table matches the Plugin version with the supported COmanage version.
 
 | Plugin |  COmanage |    PHP    |  VOMS  |
 |:------:|:---------:|:---------:|:------:|
-| v0.1.0 | v3.1.x    | &gt;=v5.6 |  3.7.0 |
+| v0.1.x | v3.1.x    | &gt;=v5.6 |  3.7.0 |
+| v0.2.x | v3.1.x    | &gt;=v5.6 |  3.7.0 |
 
 ## Limitations
 * Suspend User is not working through the API. As a workaround the plugin removes the user in case of a request for suspend.
