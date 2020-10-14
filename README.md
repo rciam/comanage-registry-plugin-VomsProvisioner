@@ -7,6 +7,11 @@ This is [COmanage Provisioner plugin](https://spaces.at.internet2.edu/display/CO
 3. Run `Console/clearcache`
 4. Run `Console/cake schema create --file schema.php --path /path/to/comanage/local/Plugin/VomsProvisioner/Config/Schema`
 
+In case step `4` fails deploy the tables using schema.sql
+```sql
+psql -h 127.0.0.1 -U registry_admin_db_user -d db_registry -f -a schema.sql
+```
+
 ## Schema update
 Not yet implemented
 
