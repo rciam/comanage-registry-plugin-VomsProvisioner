@@ -1,6 +1,7 @@
 <?php
 class AppSchema extends CakeSchema
 {
+  public $connection = 'default';
 
   public function before($event = array())
   {
