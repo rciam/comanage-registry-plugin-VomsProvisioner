@@ -519,7 +519,7 @@ $this->Html->script('VomsProvisioner.voms_provisioner_target',  array('inline' =
       </div>
       <div class="field-desc"><?php print _txt('pl.voms_provisioner.ca_dn_default.desc'); ?></div>
     </div>
-    <div class="field-info checkbox">
+    <div class="field-info">
       <?php
       if($e) {
         $default = empty($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['ca_dn_default'])
@@ -534,6 +534,80 @@ $this->Html->script('VomsProvisioner.voms_provisioner_target',  array('inline' =
       }
       ?>
     </div>
+  </li>
+  <li>
+    <div class="field-name">
+      <div class="field-title">
+        <?php print _txt('pl.voms_provisioner.cert_mdl'); ?>
+        <span class="required">*</span>
+      </div>
+      <div class="field-desc"><?php print _txt('pl.voms_provisioner.cert_mdl.desc'); ?></div>
+    </div>
+    <div class="field-info">
+      <?php
+      if($e) {
+        $default = empty($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['cert_mdl'])
+          ? ''
+          : filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['cert_mdl'],FILTER_SANITIZE_SPECIAL_CHARS);
+        print $this->Form->input('cert_mdl', array('default' => $default));
+        if($this->Form->isFieldError('cert_mdl')) {
+          print $this->Form->error('cert_mdl');
+        }
+      } else {
+        print filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['cert_mdl'],FILTER_SANITIZE_SPECIAL_CHARS);
+      }
+      ?>
+    </div>
+    <ul class="field-children">
+      <li>
+        <div class="field-name">
+          <div class="field-title">
+            <?php print _txt('pl.voms_provisioner.subject_col_name'); ?>
+            <span class="required">*</span>
+          </div>
+          <div class="field-desc"><?php print _txt('pl.voms_provisioner.subject_col_name.desc'); ?></div>
+        </div>
+        <div class="field-info">
+          <?php
+          if($e) {
+            $default = empty($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['subject_col_name'])
+              ? ''
+              : filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['subject_col_name'],FILTER_SANITIZE_SPECIAL_CHARS);
+            print $this->Form->input('subject_col_name', array('default' => $default));
+            if($this->Form->isFieldError('subject_col_name')) {
+              print $this->Form->error('subject_col_name');
+            }
+          } else {
+            print filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['subject_col_name'],FILTER_SANITIZE_SPECIAL_CHARS);
+          }
+          ?>
+        </div>
+      </li>
+      <li>
+        <div class="field-name">
+          <div class="field-title">
+            <?php print _txt('pl.voms_provisioner.issuer_col_name'); ?>
+            <span class="required">*</span>
+          </div>
+          <div class="field-desc"><?php print _txt('pl.voms_provisioner.issuer_col_name.desc'); ?></div>
+        </div>
+        <div class="field-info">
+          <?php
+          if($e) {
+            $default = empty($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['issuer_col_name'])
+              ? ''
+              : filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['issuer_col_name'],FILTER_SANITIZE_SPECIAL_CHARS);
+            print $this->Form->input('issuer_col_name', array('default' => $default));
+            if($this->Form->isFieldError('issuer_col_name')) {
+              print $this->Form->error('issuer_col_name');
+            }
+          } else {
+            print filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['issuer_col_name'],FILTER_SANITIZE_SPECIAL_CHARS);
+          }
+          ?>
+        </div>
+      </li>
+    </ul>
   </li>
   <?php if($e): ?>
     <li class="fields-submit">
