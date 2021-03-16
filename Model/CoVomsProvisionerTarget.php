@@ -56,6 +56,9 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
   );
 
   private $_voms_client = null;
+  private $_subject_col = null;
+  private $_issuer_col = null;
+  private $_Cert = null;
 
   // Validation rules for table elements
   public $validate = array(
@@ -89,6 +92,21 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       'required' => false,
       'allowEmpty' => true
     ),
+    'cert_mdl' => array(
+      'rule' => '/.*/',
+      'required' => true,
+      'allowEmpty' => false
+    ),
+    'subject_col_name' => array(
+      'rule' => '/.*/',
+      'required' => true,
+      'allowEmpty' => false
+    ),
+    'issuer_col_name' => array(
+      'rule' => '/.*/',
+      'required' => true,
+      'allowEmpty' => false
+    ),
   );
 
   /**
@@ -112,6 +130,11 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     $voremove = false;
     $voadd =false;
     $modify = false;
+
+    // Certificate
+    $this->_Cert = $coProvisioningTargetData["CoVomsProvisionerTarget"]["cert_mdl"];
+    $this->_subject_col = $coProvisioningTargetData["CoVomsProvisionerTarget"]["subject_clmn_name"];
+    $this->_issuer_col = $coProvisioningTargetData["CoVomsProvisionerTarget"]["issuer_clmn_name"];
 
     switch($op) {
       case ProvisioningActionEnum::CoPersonAdded:
@@ -163,20 +186,20 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
 
     // XXX In order to perform any action we need at least on valid certificate. If none is provided then
     // XXX throw an error
-    if(empty($user_cou_related_profile['Cert'])) {
+    if(empty($user_cou_related_profile[$this->_Cert])) {
       $this->log(__METHOD__ . '::No valid certificate. Aborting provisioning.', LOG_DEBUG);
       // fixme: Even though i am throwing an exception this is not working
       throw new RuntimeException(_txt('op.voms_provisioner.nocert'));
     }
-    // XXX Get the first one and do the action needed
+    // XXX Get the FIRST one and do the action needed
     // fixme: Make the Robot CA configuration
     // fixme: I should only do this with Personal Certificates but i do not have this information in the Model
-    if(empty($user_cou_related_profile['Cert'][0]['Cert']['issuer'])) {
+    if(empty($user_cou_related_profile[$this->_Cert][0][$this->_Cert][$this->_issuer_col])) {
       if (empty($coProvisioningTargetData["CoVomsProvisionerTarget"]["ca_dn_default"])) {
         // XXX No default DN, break Provisioning
         return;
       }
-      $user_cou_related_profile['Cert'][0]['Cert']['issuer'] = $coProvisioningTargetData["CoVomsProvisionerTarget"]["ca_dn_default"];
+      $user_cou_related_profile[$this->_Cert][0][$this->_Cert][$this->_issuer_col] = $coProvisioningTargetData["CoVomsProvisionerTarget"]["ca_dn_default"];
     }
 
     // XXX Now perform an action
@@ -190,8 +213,8 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
                         || ($user_cou_related_profile["CoPerson"]["status"] !== StatusEnum::Active                   // COPerson Active
                             && $user_cou_related_profile["CoPerson"]["status"] !== StatusEnum::GracePeriod)))) {     // COPerson GracePerio
       // fixme: How to do i know the $dn and $ca that the user used to register
-      $response = $this->_voms_client->deleteUser($user_cou_related_profile['Cert'][0]['Cert']['subject'],
-                                                  $user_cou_related_profile['Cert'][0]['Cert']['issuer']);
+      $response = $this->_voms_client->deleteUser($user_cou_related_profile[$this->_Cert][0][$this->_Cert][$this->_subject_col],
+                                                  $user_cou_related_profile[$this->_Cert][0][$this->_Cert][$this->_issuer_col]);
 
       // todo: handle the response
       $this->plogs(__METHOD__, $response);
@@ -262,7 +285,8 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     $args['contain']['CoGroupMember']['CoGroup'] = array(
       'conditions' => ['CoGroup.id' => $co_group_id],
     );
-    $args['contain']['CoOrgIdentityLink']['OrgIdentity']['Cert'] = array(
+    // todo: Check if the Cert is linked under OrgIdentity or CO Person
+    $args['contain']['CoOrgIdentityLink']['OrgIdentity'][$this->_Cert] = array(
       'conditions' => ['Cert.issuer is not null'],
     );
 
@@ -274,22 +298,23 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     foreach($user_profile["CoOrgIdentityLink"] as $link) {
       if(!empty($link["OrgIdentity"]["Cert"])) {
         foreach ($link["OrgIdentity"]["Cert"] as $cert) {
-          $user_profile['Cert'][] = $cert;
+          $user_profile[$this->_Cert][] = $cert;
         }
       }
     }
 
-    // No lets fetch the orgidentities linked with the certificates
-    if(!empty($user_profile['Cert'])) {
+    // Fetch the orgidentities linked with the certificates
+    if(!empty($user_profile[$this->_Cert])) {
       // Extract the Certificate ids
-      $cert_ids = Hash::extract($user_profile['Cert'], '{n}.id');
+      // todo: Check if the Model is linked to CO Person, OrgIdentity or Both
+      $cert_ids = Hash::extract($user_profile[$this->_Cert], '{n}.id');
       $args=array();
       $args['conditions']['Cert.id'] = $cert_ids;
       $args['contain'] = array('OrgIdentity');
       $args['contain']['OrgIdentity'][0] = 'TelephoneNumber';
       $args['contain']['OrgIdentity'][1] = 'Address';
-      $this->Cert = ClassRegistry::init('Cert');
-      $user_profile['Cert'] = $this->Cert->find('all', $args);
+      $this->Cert = ClassRegistry::init($this->_Cert);
+      $user_profile[$this->_Cert] = $this->Cert->find('all', $args);
     }
 
     return $user_profile;
@@ -332,6 +357,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
 
   public function beforeSave($options = array())
   {
+    // XXX Handle the Robot private key
     $key = Configure::read('Security.salt');
     Configure::write('Security.useOpenSsl', true);
     if(!empty($this->data["CoVomsProvisionerTarget"]["robot_key"])) {
@@ -341,6 +367,30 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
         $this->data["CoVomsProvisionerTarget"]["robot_key"] = $robot_key;
       }
     }
+
+    // XXX Check that the Cert Model exists and has the required fields. Subject and Issuer
+    if(!empty($this->data["CoVomsProvisionerTarget"]["cert_mdl"])) {
+      $Cert = $this->data["CoVomsProvisionerTarget"]["cert_mdl"];
+      $this->_subject_col = $this->data["CoVomsProvisionerTarget"]["subject_clmn_name"];
+      $issuer_clmn = $this->data["CoVomsProvisionerTarget"]["issuer_clmn_name"];
+      $this->_Cert = ClassRegistry::init($Cert);
+      // XXX Check if the Model Exists
+      if(empty($this->_Cert)) {
+        return false;
+      }
+      $validate = $this->_Cert->validate;
+      $columns = array_keys($validate);
+      // XXX Check if there is a Subject column
+      if(!in_array($this->_subject_col, $columns)) {
+        return false;
+      }
+      // XXX Check if there is an Issuer column
+      if(!in_array($issuer_clmn, $columns)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   /**
@@ -389,9 +439,9 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
                                         : '696969699';
     $user_data['user']['institution'] = !empty($user_profile["Cert"][0]["OrgIdentity"]["o"])
                                         ? $user_profile["Cert"][0]["OrgIdentity"]["o"]
-                                        : $this->getOFromSbjtDN($user_profile['Cert'][0]['Cert']['subject']);
-    $user_data['certificateSubject'] = $user_profile['Cert'][0]['Cert']['subject'];
-    $user_data['caSubject'] = $user_profile['Cert'][0]['Cert']['issuer'];
+                                        : $this->getOFromSbjtDN($user_profile[$this->_Cert][0][$this->_Cert][$this->_subject_col]);
+    $user_data['certificateSubject'] = $user_profile[$this->_Cert][0][$this->_Cert][$this->_subject_col];
+    $user_data['caSubject'] = $user_profile[$this->_Cert][0][$this->_Cert][$this->_issuer_col];
     $user_data['user']['address'] = 'Unknown';
 
     if(!empty($user_profile["Cert"][0]["OrgIdentity"]["Address"])) {

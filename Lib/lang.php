@@ -47,6 +47,12 @@ $cm_voms_provisioner_texts['en_US'] = array(
   'pl.voms_provisioner.openssl_syntax.desc' => 'Enable Openssl syntax',
   'pl.voms_provisioner.ca_dn_default'       => 'Certificate Authority DN',
   'pl.voms_provisioner.ca_dn_default.desc'  => 'Provide the default DN of the CA in case not available in User\'s Certificate.<br><b>Suggestion:</b> Use the Subject DN of the Actor.',
+  'pl.voms_provisioner.cert_mdl'            => 'Certificate Model',
+  'pl.voms_provisioner.cert_mdl.desc'       => 'Provide the name of the Certificate Model used to store user\'s certificates.<br>In case of plugin use the syntax Plugin.Model',
+  'pl.voms_provisioner.subject_col_name'      => 'Certificate Subject',
+  'pl.voms_provisioner.subject_col_name.desc' => 'Certificate Subject DN Column Name',
+  'pl.voms_provisioner.issuer_col_name'       => 'Certificate Issuer',
+  'pl.voms_provisioner.issuer_col_name.desc'  => 'Certificate Issuer DN Column Name',
   'pl.voms_provisioner.info'                => 'Define the VOMs where you will push/sync the status of the associated Group/COU',
 
   // Cert Preview
