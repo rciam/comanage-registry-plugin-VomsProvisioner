@@ -58,6 +58,16 @@ class VomsServerImportModeEnum
   );
 }
 
+class EgiLevelOfAssurance
+{
+  const LOW = 'profile@https://aai.egi.eu/LoA#Low';
+  const SUBSTANTIAL = 'profile@https://aai.egi.eu/LoA#Substantial';
+  const order = array(
+    'profile@https://aai.egi.eu/LoA#Low' => 1,
+    'profile@https://aai.egi.eu/LoA#Substantial' => 2,
+  );
+}
+
 class VomsSoapServicesEnum
 {
   const VOMS_CERTIFICATES = 'VOMSCertificates';
@@ -168,5 +178,19 @@ class OpenSslNameUtilsEnum
     's' => 'ST',
     'ip' => '1.3.6.1.4.1.42.2.11.2.1',
     'nameatbirth' => '1.3.36.8.3.14'
+  );
+}
+
+class VomsProvisionerAssuranceComponentEnum
+{
+  const IdentifierUniqueness  = 'ID';
+  const IdentityAssurance     = 'IAP';
+  const AttributeAssurance    = 'ATP';
+  const AssuranceProfile      = 'profile';
+  const type = array(
+    'ID'  => 'Identifier Uniqueness',
+    'IAP' => 'Identity Assurance',
+    'ATP' => 'Attribute Assurance',
+    'profile' => 'Profile Assurance',
   );
 }

@@ -491,27 +491,90 @@ $this->Html->script('VomsProvisioner.voms_provisioner_target',  array('inline' =
       ?>
     </div>
   </li>
-   <li>
-    <div class="field-name">
-        <div class="field-title">
-          <?php print _txt('pl.voms_provisioner.openssl_syntax'); ?>      
-        </div>
-        <div class="field-desc"><?php print _txt('pl.voms_provisioner.openssl_syntax.desc'); ?></div>
+  <li>
+  <div class="field-name">
+      <div class="field-title">
+        <?php print _txt('pl.voms_provisioner.openssl_syntax'); ?>
       </div>
-      <div class="field-info">
-      <?php
-        if($e) {
-          $isChecked = (isset($co_voms_provisioner_targets) ? $co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['openssl_syntax'] : FALSE);
-          print $this->Form->checkbox('openssl_syntax', array('checked' => $isChecked));
-          if($this->Form->isFieldError('openssl_syntax')) {
-            print $this->Form->error('openssl_syntax');
-          }
-        } else {
-          print $co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['openssl_syntax'];
+      <div class="field-desc"><?php print _txt('pl.voms_provisioner.openssl_syntax.desc'); ?></div>
+    </div>
+    <div class="field-info">
+    <?php
+      if($e) {
+        $isChecked = (isset($co_voms_provisioner_targets) ? $co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['openssl_syntax'] : FALSE);
+        print $this->Form->checkbox('openssl_syntax', array('checked' => $isChecked));
+        if($this->Form->isFieldError('openssl_syntax')) {
+          print $this->Form->error('openssl_syntax');
         }
-      ?>
+      } else {
+        print $co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['openssl_syntax'];
+      }
+    ?>
+    </div>
+  </li>
+  <li>
+    <div class="field-name">
+      <div class="field-title">
+        <?php print _txt('pl.voms_provisioner.assurance_req'); ?>
       </div>
-    </li>
+    </div>
+    <ul class="field-children">
+      <li>
+        <div class="field-name">
+          <div class="field-title">
+            <?php print _txt('pl.voms_provisioner.assurance_level'); ?>
+          </div>
+          <div class="field-desc"><?php print _txt('pl.voms_provisioner.assurance_level.desc'); ?></div>
+        </div>
+        <div class="field-info">
+          <?php
+          if($e) {
+            $default = empty($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['assurance_level'])
+              ? ''
+              : filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['assurance_level'],FILTER_SANITIZE_SPECIAL_CHARS);
+            print $this->Form->input('assurance_level', array('default' => $default));
+            if($this->Form->isFieldError('assurance_level')) {
+              print $this->Form->error('assurance_level');
+            }
+          } else {
+            print filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['assurance_level'],FILTER_SANITIZE_SPECIAL_CHARS);
+          }
+          ?>
+        </div>
+      </li>
+      <li>
+        <div class="field-name">
+          <div class="field-title">
+            <?php print _txt('pl.voms_provisioner.assurance_level_type'); ?>
+          </div>
+          <div class="field-desc"><?php print _txt('pl.voms_provisioner.assurance_level_type.desc'); ?></div>
+        </div>
+        <div class="field-info">
+          <?php
+          $attrs = array();
+          $attrs['value'] = (!empty($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['assurance_level_type'])
+            ? $co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['assurance_level_type']
+            : VomsProvisionerAssuranceComponentEnum::AssuranceProfile);
+          $attrs['empty'] = true;
+
+          if ($e) {
+            print $this->Form->select(
+              'assurance_level_type',
+              VomsProvisionerAssuranceComponentEnum::type,
+              $attrs
+            );
+
+            if ($this->Form->isFieldError('assurance_level_type')) {
+              print $this->Form->error('assurance_level_type');
+            }
+          } else {
+            print VomsProvisionerAssuranceComponentEnum::type[$co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]['assurance_level_type']];
+          }
+          ?>
+        </div>
+      </li>
+    </ul>
+  </li>
   <li>
     <div class="field-name">
       <div class="field-title">
