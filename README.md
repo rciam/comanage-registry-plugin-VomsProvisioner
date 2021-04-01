@@ -23,8 +23,10 @@ Not yet implemented
    * Load the Private Key paired with the Certificate loaded above
      * Key and Ceritificate must be associated with an Administrator user in VOMS
    * Enable/Disable OpenSSL syntax. Default to RFC2253 syntax (**experimental**)
+   * Choose minimum level of Assurance requirement
    * Provide the Subject DN of the Actor(Robot User), in case User's Certificate has no DN for the Certificate Authority
-![VOMS Provisioner Configuration](Documentation/images/voms_provisioner_configuration_v2.png)
+   * Provide the Certificate Model, Subject Column and Issuer Column Name
+![VOMS Provisioner Configuration](Documentation/images/voms_provisioner_configuration_v3.png)
 ## Compatibility matrix
 
 This table matches the Plugin version with the supported COmanage version.
@@ -33,6 +35,8 @@ This table matches the Plugin version with the supported COmanage version.
 |:------:|:---------:|:---------:|:------:|
 | v0.1.x | v3.1.x    | &gt;=v5.6 |  3.7.0 |
 | v0.2.x | v3.1.x    | &gt;=v5.6 |  3.7.0 |
+| v0.3.x | v3.1.x    | &gt;=v5.6 |  3.8.0 |
+
 
 ## Limitations
 * Suspend User is not working through the API. As a workaround the plugin removes the user in case of a request for suspend.

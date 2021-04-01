@@ -222,7 +222,10 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     $cert_list = Hash::combine(
       $user_cou_related_profile[$this->_Cert],
       '{n}.' . $this->_Cert . '.id',
-      array( '%s@with_issuer@%s', '{n}.' . $this->_Cert . '.' . $this->_subject_col, '{n}.' . $this->_Cert . '.' . $this->_issuer_col),
+      array( '%s@separator@%s@separator@%d',
+        '{n}.' . $this->_Cert . '.' . $this->_subject_col,
+        '{n}.' . $this->_Cert . '.' . $this->_issuer_col,
+        '{n}.' . $this->_Cert . '.ordr'),
       '{n}.' . $this->_Cert . '.org_identity_id');
     $ident_list = Hash::combine(
       $user_cou_related_profile[$this->_Cert],
@@ -242,6 +245,31 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       $processed_list[$org_id]['Assurance'] = !empty($assurance_list[$org_id]) ? $assurance_list[$org_id] : array();
     }
 
+    // Explode certificate information
+    foreach($processed_list as $org_id => $orgid_models) {
+      if(!empty($orgid_models[$this->_Cert])) {
+        foreach($orgid_models[$this->_Cert] as $certid => $denseval) {
+          list($subjectex, $issuerex, $ordrex) = explode('@separator@', $denseval);
+          $processed_list[$org_id][$this->_Cert][$certid] = array(
+            'issuer' => $issuerex,
+            'subject' => $subjectex,
+            'ordr' => (int)$ordrex,
+          );
+        }
+      }
+    }
+
+    // Order paths according to Certificate Ordering
+    $flattened_proc_list = Hash::flatten($processed_list);
+    $ordering_flatten = array_filter(
+      $flattened_proc_list,
+      function ($value, $key) {
+        return (strpos($key, '.ordr') !== false);
+      },
+      ARRAY_FILTER_USE_BOTH
+    );
+    asort($ordering_flatten);
+
     // XXX Iterate over OrgIdentities and get the first which:
     // * assurane level matches the level requested by the configuration
     // * Has a certificate
@@ -249,7 +277,13 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     $issuer = null;
     $subject = null;
     $org_id_picked = null;
-    foreach($processed_list as $org_id => $orgid_models) {
+    $cert_id_picked = null;
+    $max_org_assurance_lvl = -1;
+    foreach($ordering_flatten as $path => $order) {
+      $full_path = Hash::expand(array($path => $order));
+      $org_id = key($full_path);
+      $cert_id = key($full_path[$org_id][$this->_Cert]);
+      $orgid_models = $processed_list[$org_id];
       $has_assurance = in_array($this->_assurance_level, $orgid_models['Assurance']) ? true : false;
       if(!$has_assurance) {
         $required_assurance_order = (isset(EgiLevelOfAssurance::order[$this->_assurance_level])) ? EgiLevelOfAssurance::order[$this->_assurance_level] : false;
@@ -270,20 +304,18 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       }
       $has_certificate = false;
 
-      if(!empty($orgid_models[$this->_Cert])) {
-        foreach($orgid_models[$this->_Cert] as $cert_bundle) {
-          list($subject_tmp, $issuer_tmp) = explode('@with_issuer@', $cert_bundle);
-          if(!empty($subject_tmp)
-             && !empty($issuer_tmp)) {
-            $has_certificate = true;
-            break;
-          }
+      if(!empty($processed_list[$org_id][$this->_Cert])) {
+        $certificate = $processed_list[$org_id][$this->_Cert][$cert_id];
+        if(!empty($certificate['subject'])
+          && !empty($certificate['issuer'])) {
+          $has_certificate = true;
         }
       }
       if($has_assurance && $has_certificate) {
-        $issuer = $issuer_tmp;
-        $subject = $subject_tmp;
+        $issuer = $certificate['issuer'];
+        $subject = $certificate['subject'];
         $org_id_picked = $org_id;
+        $cert_id_picked = $cert_id;
         break;
       }
     }
@@ -300,8 +332,8 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     $user_cou_related_profile_flatten = Hash::flatten($user_cou_related_profile);
     $keys_found = array_filter(
       $user_cou_related_profile_flatten,
-      function ($value, $key) use ($org_id_picked) {
-        return ((int)$value === (int)$org_id_picked
+      function ($value, $key) use ($cert_id_picked) {
+        return ((int)$value === (int)$cert_id_picked
                  && strpos($key, 'CoOrgIdentityLink.') === false);
       },
       ARRAY_FILTER_USE_BOTH
@@ -346,7 +378,35 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       // XXX add user into VOMS
       $user_payload = $this->getUserData($user_cou_related_profile, $provisioningData, $idx);
       $response = $this->_voms_client->createUser($user_payload);
-      // todo: handle the response
+      // On a successful provisioning create a new entry in the database
+      if(isset($response["status_code"])
+         && $response["status_code"] === 200) {
+        // Create an entry in Provisioner Cert Records
+        $co_person_role_id = $this->getRoleIDromRequest($provisioningData);
+        $cert_records = ClassRegistry::init('ProvisionerCertRecord');
+        $cert_entry = array(
+          'ProvisionerCertRecord' => array(
+            'cert_id' => $cert_id,
+            'co_person_role_id' => $co_person_role_id,
+            'actor_identifier' => $_SESSION["Auth"]["User"]["username"]
+          ),
+        );
+
+        $save_options = array(
+          'validate' => true,
+          'atomic' => true,
+          'provisioning' => false,
+        );
+
+        if($cert_records->save($cert_entry, $save_options)) {
+          $this->log(__METHOD__ . "::Provisioner Cert Record saved successfully ", LOG_DEBUG);
+        } else {
+          $invalidFields = $cert_records->invalidFields();
+          $this->log(__METHOD__ . "::exception error => " . print_r($invalidFields, true), LOG_DEBUG);
+        }
+      }
+
+      // handle the response
       $this->plogs(__METHOD__, $response);
       $this->handleResponse($response);
     }
@@ -666,7 +726,8 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
         $coProvisioningTargetData["CoVomsProvisionerTarget"]['openssl_syntax']);
       if(!is_null($voms_client)) {
         $response = $voms_client->getUserStats();
-        if($response["status_code"] === 200) {
+        if(isset($response["status_code"])
+           && $response["status_code"] === 200) {
           $this->plogs(__METHOD__, $server["protocol"] . "//:" . $server["host"] . ':' . $server["port"] . ' is alive.');
           return $voms_client;
         }
@@ -705,5 +766,39 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       return $ret["Cou"]["name"];
     }
     return '';
+  }
+
+
+  /**
+   * @param $provisioningData
+   * @return mixed|string|null
+   */
+  private function getRoleIDromRequest($provisioningData) {
+    if(!empty($_REQUEST["data"]["CoPersonRole"]["cou_id"])) { // Post Actions
+      $cou_id = $_REQUEST["data"]["CoPersonRole"]["cou_id"];
+      $flatten_prov_data = Hash::flatten($provisioningData);
+      $keys_found = array_filter(
+        $flatten_prov_data,
+        function ($value, $key) use ($cou_id) {
+          return ((int)$value === (int)$cou_id
+                  && strpos($key, 'Cou.id') !== false);
+        },
+        ARRAY_FILTER_USE_BOTH
+      );
+      $full_path = Hash::expand($keys_found);
+      $idx = key($full_path['CoPersonRole']);
+
+      return $provisioningData['CoPersonRole'][$idx]['id'];
+    } elseif(is_array($_REQUEST)) {                           // Delete Actions
+      $request = array_keys($_REQUEST);
+      $req_path = explode('/', $request[0]);
+      $req_path = array_filter($req_path); // removing blank, null, false, 0 (zero) values
+      // XXX We only want to move forward if this refers to CoPersonRole or CoPerson(?)
+      if(!in_array('co_person_roles', $req_path)) {
+        return null;
+      }
+      return end($req_path);
+    }
+    return null;
   }
 }
