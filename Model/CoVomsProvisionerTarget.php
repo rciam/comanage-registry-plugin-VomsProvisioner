@@ -217,6 +217,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       throw new RuntimeException(_txt('op.voms_provisioner.nocert'));
     }
 
+    ///// MOVE TO SEPARATE FUNCTION getCertificateByLoA($user_cou_related_profile, $assurance_prerequisite)
     // XXX Check the level of assurance
     $org_list = Hash::extract($user_cou_related_profile[$this->_Cert], '{n}.OrgIdentity.id');
     $cert_list = Hash::combine(
@@ -278,7 +279,6 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     $subject = null;
     $org_id_picked = null;
     $cert_id_picked = null;
-    $max_org_assurance_lvl = -1;
     foreach($ordering_flatten as $path => $order) {
       $full_path = Hash::expand(array($path => $order));
       $org_id = key($full_path);
@@ -312,6 +312,8 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
         break;
       }
     }
+
+    // SEPARATE FUNCTION ABOVE //
 
     // Found no matching assurance - cert bundle
     if(is_null($issuer) || is_null($subject)) {
