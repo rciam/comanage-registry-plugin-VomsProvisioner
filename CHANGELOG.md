@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Provisioner will link the Provisioned Certificate to the corresponed CO Person Role(COU)
 - Pick the Certificate linked under the delete CO Person Role to use for user (de)provisioning
 
+### Fixed
+- Extract CO Person Role ID during a a petition
+
 
 ## [0.2.0] - 2020-10-14
 ### Added

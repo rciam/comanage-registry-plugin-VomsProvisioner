@@ -185,7 +185,16 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
 
     // XXX For COU Actions allow only the ones matching the COU name in the configuration of the provisioner
     // XXX For CO Person Actions skip
-    if(empty($_REQUEST["data"]["CoPerson"])) {
+    $request_keys = array_keys($_REQUEST);
+    // Is the request part of a petition
+    $is_petition = array_filter(
+      $request_keys,
+      function($val) {
+        return strpos($val, 'co_petitions') !== false;
+      }
+    );
+    if(empty($_REQUEST["data"]["CoPerson"])
+       && empty($is_petition)) {
       $cou_name_frm_request = $this->getCouNameFromRequest();
       if($coProvisioningTargetData["CoVomsProvisionerTarget"]["vo"] !== $cou_name_frm_request) {
         return true;
@@ -363,7 +372,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
                         || ($user_cou_related_profile["CoPerson"]["status"] !== StatusEnum::Active                   // COPerson Active
                             && $user_cou_related_profile["CoPerson"]["status"] !== StatusEnum::GracePeriod)))) {     // COPerson GracePerio
       // Get the Certificate from the CO Person Role
-      $co_person_role_id = $this->getRoleIDromRequest($provisioningData);
+      $co_person_role_id = $this->getRoleIDromRequest($provisioningData, $coProvisioningTargetData);
       $subject_linked = null;
       $issuer_linked = null;
       if(!empty($_SESSION['ProvisionerCertRecord'])) {
@@ -404,7 +413,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       if(!empty($response["status_code"])
          && $response["status_code"] === 200) {
         // Create an entry in Provisioner Cert Records
-        $co_person_role_id = $this->getRoleIDromRequest($provisioningData);
+        $co_person_role_id = $this->getRoleIDromRequest($provisioningData, $coProvisioningTargetData);
         $cert_records = ClassRegistry::init('ProvisionerCertRecord');
         $cert_entry = array(
           'ProvisionerCertRecord' => array(
@@ -817,7 +826,18 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
    * @param $provisioningData
    * @return int|null
    */
-  private function getRoleIDromRequest($provisioningData) {
+  private function getRoleIDromRequest($provisioningData, $coProvisioningTargetData) {
+    // 'CoPersonRole.{n}.Cou.name'
+    $cou_name = $coProvisioningTargetData["CoVomsProvisionerTarget"]["vo"];
+    $provisioningData_flatten = Hash::flatten($provisioningData);
+    $cou_paths = array_filter(
+      $provisioningData_flatten,
+      function ($val, $path) use ($cou_name) {
+        return ($cou_name === $val
+                && strpos($path, '.Cou.name') !== false);
+      },
+      ARRAY_FILTER_USE_BOTH
+    );
     if(!empty($_REQUEST["data"]["CoPersonRole"]["cou_id"])) { // Post Actions
       $cou_id = $_REQUEST["data"]["CoPersonRole"]["cou_id"];
       $flatten_prov_data = Hash::flatten($provisioningData);
@@ -830,9 +850,13 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
         ARRAY_FILTER_USE_BOTH
       );
       $full_path = Hash::expand($keys_found);
-      $idx = key($full_path['CoPersonRole']);
+      $role_idx = key($full_path['CoPersonRole']);
 
-      return (int)$provisioningData['CoPersonRole'][$idx]['id'];
+      return (int)$provisioningData['CoPersonRole'][$role_idx]['id'];
+    } elseif(!empty($cou_paths)) {
+      $personrole_expand = Hash::expand($cou_paths);
+      $role_idx = key($personrole_expand['CoPersonRole']);
+      return $provisioningData['CoPersonRole'][$role_idx]['id'];
     } elseif(is_array($_REQUEST)) {                           // Delete Actions
       $request = array_keys($_REQUEST);
       $req_path = explode('/', $request[0]);
