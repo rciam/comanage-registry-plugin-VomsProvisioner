@@ -58,16 +58,6 @@ class VomsServerImportModeEnum
   );
 }
 
-class EgiLevelOfAssurance
-{
-  const LOW = 'profile@https://aai.egi.eu/LoA#Low';
-  const SUBSTANTIAL = 'profile@https://aai.egi.eu/LoA#Substantial';
-  const order = array(
-    'profile@https://aai.egi.eu/LoA#Low' => 1,
-    'profile@https://aai.egi.eu/LoA#Substantial' => 2,
-  );
-}
-
 class VomsSoapServicesEnum
 {
   const VOMS_CERTIFICATES = 'VOMSCertificates';

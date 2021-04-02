@@ -285,21 +285,14 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       $cert_id = key($full_path[$org_id][$this->_Cert]);
       $orgid_models = $processed_list[$org_id];
       $has_assurance = in_array($this->_assurance_level, $orgid_models['Assurance']) ? true : false;
-      if(!$has_assurance) {
-        $required_assurance_order = (isset(EgiLevelOfAssurance::order[$this->_assurance_level])) ? EgiLevelOfAssurance::order[$this->_assurance_level] : false;
-        $egi_loa = array_keys(EgiLevelOfAssurance::order);
-        $org_loa_intersect = array_intersect($orgid_models['Assurance'], $egi_loa);
-        $org_assurance_order = false;
-        foreach($org_loa_intersect as $loa) {
-          $this_order = EgiLevelOfAssurance::order[$loa];
-          if($org_assurance_order === false
-             || $this_order > $org_assurance_order) {
-            $org_assurance_order = $this_order;
-            if($org_assurance_order >= $required_assurance_order) {
-              $has_assurance = true;
-              break;
-            }
-          }
+
+      if(!$has_assurance
+         && $this->assuranceValueOrder($this->_assurance_level) > 0
+         && $this->assuranceValueOrder($orgid_models['Assurance']) > 0 ) {
+        $required_assurance_order = $this->assuranceValueOrder($this->_assurance_level);
+        $org_assurance_order = $this->assuranceValueOrder($orgid_models['Assurance']);
+        if($org_assurance_order >= $required_assurance_order) {
+          $has_assurance = true;
         }
       }
       $has_certificate = false;
@@ -343,9 +336,17 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       if(strpos($path, $this->_Cert . '.') !== false) {
         $re = '/Cert.(\d+).(?:.*)/m';
         preg_match($re, $path, $match);
-        $idx = isset($match[1]) ? (int)$match[1] : -1;
+        $idx = !empty($match[1]) ? (int)$match[1] : -1;
         break;
       }
+    }
+
+    // Found no matching assurance - cert bundle
+    if($idx < 0) {
+      $this->log(__METHOD__ . '::No valid certificate. Aborting provisioning.', LOG_DEBUG);
+      // fixme: Even though i am throwing an exception this is not working
+      throw new RuntimeException(_txt('op.voms_provisioner.nocert'));
+      return false;
     }
 
 
@@ -359,9 +360,28 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
                         && $user_cou_related_profile["CoPersonRole"][0]["status"] !== StatusEnum::GracePeriod)       // COU/VO GracePeriod
                         || ($user_cou_related_profile["CoPerson"]["status"] !== StatusEnum::Active                   // COPerson Active
                             && $user_cou_related_profile["CoPerson"]["status"] !== StatusEnum::GracePeriod)))) {     // COPerson GracePerio
-      // fixme: How to do i know the $dn and $ca that the user used to register
-      $response = $this->_voms_client->deleteUser($user_cou_related_profile[$this->_Cert][$idx][$this->_Cert][$this->_subject_col],
-                                                  $user_cou_related_profile[$this->_Cert][$idx][$this->_Cert][$this->_issuer_col]);
+      // Get the Certificate from the CO Person Role
+      $co_person_role_id = $this->getRoleIDromRequest($provisioningData);
+      $subject_linked = null;
+      $issuer_linked = null;
+      if(!empty($_SESSION['ProvisionerCertRecord'])) {
+        $session_coperson_role_id = !empty($_SESSION['ProvisionerCertRecord']['co_person_role_id']) ? $_SESSION['ProvisionerCertRecord']['co_person_role_id'] : -1;
+        if($session_coperson_role_id === $co_person_role_id
+           && !empty($_SESSION['ProvisionerCertRecord']['cert_id'])) {
+          $Cert = ClassRegistry::init($this->_Cert);
+          $Cert->id = $_SESSION['ProvisionerCertRecord']['cert_id'];
+          $subject_linked = $Cert->field($this->_subject_col);
+          $issuer_linked = $Cert->field($this->_issuer_col);
+        }
+        unset($_SESSION['ProvisionerCertRecord']);
+      }
+
+      if (!is_null($subject_linked) && !is_null($issuer_linked)) {
+        $response = $this->_voms_client->deleteUser($subject_linked,$issuer_linked);
+      } else {
+        $response = $this->_voms_client->deleteUser($user_cou_related_profile[$this->_Cert][$idx][$this->_Cert][$this->_subject_col],
+                                                    $user_cou_related_profile[$this->_Cert][$idx][$this->_Cert][$this->_issuer_col]);
+      }
 
       // todo: handle the response
       $this->plogs(__METHOD__, $response);
@@ -379,7 +399,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       $user_payload = $this->getUserData($user_cou_related_profile, $provisioningData, $idx);
       $response = $this->_voms_client->createUser($user_payload);
       // On a successful provisioning create a new entry in the database
-      if(isset($response["status_code"])
+      if(!empty($response["status_code"])
          && $response["status_code"] === 200) {
         // Create an entry in Provisioner Cert Records
         $co_person_role_id = $this->getRoleIDromRequest($provisioningData);
@@ -412,6 +432,28 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     }
 
     return true;
+  }
+
+  /**
+   * @param $level
+   * @return int
+   */
+  public function assuranceValueOrder($level) {
+    // Undefined value leve
+    if(empty($level)) {
+      return -1;
+    }
+    // Non recognized level in order array
+    if(empty($order[$level])) {
+      return -1;
+    }
+
+    $order = array(
+      'profile@https://aai.egi.eu/LoA#Low' => 1,
+      'profile@https://aai.egi.eu/LoA#Substantial' => 2,
+    );
+
+    return $order[$level];
   }
 
 
@@ -726,7 +768,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
         $coProvisioningTargetData["CoVomsProvisionerTarget"]['openssl_syntax']);
       if(!is_null($voms_client)) {
         $response = $voms_client->getUserStats();
-        if(isset($response["status_code"])
+        if(!empty($response["status_code"])
            && $response["status_code"] === 200) {
           $this->plogs(__METHOD__, $server["protocol"] . "//:" . $server["host"] . ':' . $server["port"] . ' is alive.');
           return $voms_client;
@@ -771,7 +813,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
 
   /**
    * @param $provisioningData
-   * @return mixed|string|null
+   * @return int|null
    */
   private function getRoleIDromRequest($provisioningData) {
     if(!empty($_REQUEST["data"]["CoPersonRole"]["cou_id"])) { // Post Actions
@@ -788,7 +830,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       $full_path = Hash::expand($keys_found);
       $idx = key($full_path['CoPersonRole']);
 
-      return $provisioningData['CoPersonRole'][$idx]['id'];
+      return (int)$provisioningData['CoPersonRole'][$idx]['id'];
     } elseif(is_array($_REQUEST)) {                           // Delete Actions
       $request = array_keys($_REQUEST);
       $req_path = explode('/', $request[0]);
@@ -797,7 +839,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       if(!in_array('co_person_roles', $req_path)) {
         return null;
       }
-      return end($req_path);
+      return (int)end($req_path);
     }
     return null;
   }
