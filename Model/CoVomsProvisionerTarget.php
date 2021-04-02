@@ -59,6 +59,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
   private $_subject_col = null;
   private $_issuer_col = null;
   private $_Cert = null;
+  private $_assurance_level = null;
 
   // Validation rules for table elements
   public $validate = array(
@@ -107,6 +108,16 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       'required' => true,
       'allowEmpty' => false
     ),
+    'assurance_level' => array(
+      'rule' => 'notBlank',
+      'required' => true,
+      'allowEmpty' => true
+    ),
+    'assurance_level_type' => array(
+      'rule' => 'notBlank',
+      'required' => true,
+      'allowEmpty' => true
+    )
   );
 
   /**
@@ -133,8 +144,15 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
 
     // Certificate
     $this->_Cert = $coProvisioningTargetData["CoVomsProvisionerTarget"]["cert_mdl"];
-    $this->_subject_col = $coProvisioningTargetData["CoVomsProvisionerTarget"]["subject_clmn_name"];
-    $this->_issuer_col = $coProvisioningTargetData["CoVomsProvisionerTarget"]["issuer_clmn_name"];
+    $this->_subject_col = $coProvisioningTargetData["CoVomsProvisionerTarget"]["subject_col_name"];
+    $this->_issuer_col = $coProvisioningTargetData["CoVomsProvisionerTarget"]["issuer_col_name"];
+    if(!empty($coProvisioningTargetData["CoVomsProvisionerTarget"]["assurance_level_type"])
+       && !empty($coProvisioningTargetData["CoVomsProvisionerTarget"]["assurance_level"])) {
+      $this->_assurance_level =
+        $coProvisioningTargetData["CoVomsProvisionerTarget"]["assurance_level_type"]
+        . "@"
+        . $coProvisioningTargetData["CoVomsProvisionerTarget"]["assurance_level"];
+    }
 
     switch($op) {
       case ProvisioningActionEnum::CoPersonAdded:
@@ -191,16 +209,145 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       // fixme: Even though i am throwing an exception this is not working
       throw new RuntimeException(_txt('op.voms_provisioner.nocert'));
     }
-    // XXX Get the FIRST one and do the action needed
-    // fixme: Make the Robot CA configuration
-    // fixme: I should only do this with Personal Certificates but i do not have this information in the Model
-    if(empty($user_cou_related_profile[$this->_Cert][0][$this->_Cert][$this->_issuer_col])) {
-      if (empty($coProvisioningTargetData["CoVomsProvisionerTarget"]["ca_dn_default"])) {
-        // XXX No default DN, break Provisioning
-        return;
-      }
-      $user_cou_related_profile[$this->_Cert][0][$this->_Cert][$this->_issuer_col] = $coProvisioningTargetData["CoVomsProvisionerTarget"]["ca_dn_default"];
+    // If one the Certificate's Subject or Issuer DN is empty then return
+    if(empty($user_cou_related_profile[$this->_Cert][0][$this->_Cert][$this->_issuer_col])
+       || empty($coProvisioningTargetData["CoVomsProvisionerTarget"]["ca_dn_default"])) {
+      // XXX No default DN, break Provisioning
+      $this->log(__METHOD__ . '::Subject or Issuer DN is empty. Aborting provisioning.', LOG_DEBUG);
+      throw new RuntimeException(_txt('op.voms_provisioner.nocert'));
     }
+
+    // XXX Check the level of assurance
+    $org_list = Hash::extract($user_cou_related_profile[$this->_Cert], '{n}.OrgIdentity.id');
+    $cert_list = Hash::combine(
+      $user_cou_related_profile[$this->_Cert],
+      '{n}.' . $this->_Cert . '.id',
+      array( '%s@separator@%s@separator@%d',
+        '{n}.' . $this->_Cert . '.' . $this->_subject_col,
+        '{n}.' . $this->_Cert . '.' . $this->_issuer_col,
+        '{n}.' . $this->_Cert . '.ordr'),
+      '{n}.' . $this->_Cert . '.org_identity_id');
+    $ident_list = Hash::combine(
+      $user_cou_related_profile[$this->_Cert],
+      '{n}.OrgIdentity.Identifier.{n}.id',
+      '{n}.OrgIdentity.Identifier.{n}.identifier',
+      '{n}.OrgIdentity.Identifier.{n}.org_identity_id');
+    $assurance_list = Hash::combine(
+      $user_cou_related_profile[$this->_Cert],
+      '{n}.OrgIdentity.Assurance.{n}.id',
+      array( '%s@%s', '{n}.OrgIdentity.Assurance.{n}.type', '{n}.OrgIdentity.Assurance.{n}.value'),
+      '{n}.OrgIdentity.Assurance.{n}.org_identity_id');
+
+    $processed_list = array();
+    foreach( $org_list as $org_id) {
+      $processed_list[$org_id][$this->_Cert] = !empty($cert_list[$org_id]) ? $cert_list[$org_id] : array();
+      $processed_list[$org_id]['Identifier'] = !empty($ident_list[$org_id]) ? $ident_list[$org_id] : array();
+      $processed_list[$org_id]['Assurance'] = !empty($assurance_list[$org_id]) ? $assurance_list[$org_id] : array();
+    }
+
+    // Explode certificate information
+    foreach($processed_list as $org_id => $orgid_models) {
+      if(!empty($orgid_models[$this->_Cert])) {
+        foreach($orgid_models[$this->_Cert] as $certid => $denseval) {
+          list($subjectex, $issuerex, $ordrex) = explode('@separator@', $denseval);
+          $processed_list[$org_id][$this->_Cert][$certid] = array(
+            'issuer' => $issuerex,
+            'subject' => $subjectex,
+            'ordr' => (int)$ordrex,
+          );
+        }
+      }
+    }
+
+    // Order paths according to Certificate Ordering
+    $flattened_proc_list = Hash::flatten($processed_list);
+    $ordering_flatten = array_filter(
+      $flattened_proc_list,
+      function ($value, $key) {
+        return (strpos($key, '.ordr') !== false);
+      },
+      ARRAY_FILTER_USE_BOTH
+    );
+    asort($ordering_flatten);
+
+    // XXX Iterate over OrgIdentities and get the first which:
+    // * assurane level matches the level requested by the configuration
+    // * Has a certificate
+    // Store the orgId into a variable in order to use below
+    $issuer = null;
+    $subject = null;
+    $org_id_picked = null;
+    $cert_id_picked = null;
+    $max_org_assurance_lvl = -1;
+    foreach($ordering_flatten as $path => $order) {
+      $full_path = Hash::expand(array($path => $order));
+      $org_id = key($full_path);
+      $cert_id = key($full_path[$org_id][$this->_Cert]);
+      $orgid_models = $processed_list[$org_id];
+      $has_assurance = in_array($this->_assurance_level, $orgid_models['Assurance']) ? true : false;
+      if(!$has_assurance) {
+        $required_assurance_order = (isset(EgiLevelOfAssurance::order[$this->_assurance_level])) ? EgiLevelOfAssurance::order[$this->_assurance_level] : false;
+        $egi_loa = array_keys(EgiLevelOfAssurance::order);
+        $org_loa_intersect = array_intersect($orgid_models['Assurance'], $egi_loa);
+        $org_assurance_order = false;
+        foreach($org_loa_intersect as $loa) {
+          $this_order = EgiLevelOfAssurance::order[$loa];
+          if($org_assurance_order === false
+             || $this_order > $org_assurance_order) {
+            $org_assurance_order = $this_order;
+            if($org_assurance_order >= $required_assurance_order) {
+              $has_assurance = true;
+              break;
+            }
+          }
+        }
+      }
+      $has_certificate = false;
+
+      if(!empty($processed_list[$org_id][$this->_Cert])) {
+        $certificate = $processed_list[$org_id][$this->_Cert][$cert_id];
+        if(!empty($certificate['subject'])
+          && !empty($certificate['issuer'])) {
+          $has_certificate = true;
+        }
+      }
+      if($has_assurance && $has_certificate) {
+        $issuer = $certificate['issuer'];
+        $subject = $certificate['subject'];
+        $org_id_picked = $org_id;
+        $cert_id_picked = $cert_id;
+        break;
+      }
+    }
+
+    // Found no matching assurance - cert bundle
+    if(is_null($issuer) || is_null($subject)) {
+      $this->log(__METHOD__ . '::No valid certificate. Aborting provisioning.', LOG_DEBUG);
+      // fixme: Even though i am throwing an exception this is not working
+      throw new RuntimeException(_txt('op.voms_provisioner.nocert'));
+      return false;
+    }
+
+    // Get the index(idx) that match the search from above and use it in $user_cou_related_profile array
+    $user_cou_related_profile_flatten = Hash::flatten($user_cou_related_profile);
+    $keys_found = array_filter(
+      $user_cou_related_profile_flatten,
+      function ($value, $key) use ($cert_id_picked) {
+        return ((int)$value === (int)$cert_id_picked
+                 && strpos($key, 'CoOrgIdentityLink.') === false);
+      },
+      ARRAY_FILTER_USE_BOTH
+    );
+    $idx = -1;
+    foreach($keys_found as $path => $value) {
+      if(strpos($path, $this->_Cert . '.') !== false) {
+        $re = '/Cert.(\d+).(?:.*)/m';
+        preg_match($re, $path, $match);
+        $idx = isset($match[1]) ? (int)$match[1] : -1;
+        break;
+      }
+    }
+
 
     // XXX Now perform an action
 
@@ -213,8 +360,8 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
                         || ($user_cou_related_profile["CoPerson"]["status"] !== StatusEnum::Active                   // COPerson Active
                             && $user_cou_related_profile["CoPerson"]["status"] !== StatusEnum::GracePeriod)))) {     // COPerson GracePerio
       // fixme: How to do i know the $dn and $ca that the user used to register
-      $response = $this->_voms_client->deleteUser($user_cou_related_profile[$this->_Cert][0][$this->_Cert][$this->_subject_col],
-                                                  $user_cou_related_profile[$this->_Cert][0][$this->_Cert][$this->_issuer_col]);
+      $response = $this->_voms_client->deleteUser($user_cou_related_profile[$this->_Cert][$idx][$this->_Cert][$this->_subject_col],
+                                                  $user_cou_related_profile[$this->_Cert][$idx][$this->_Cert][$this->_issuer_col]);
 
       // todo: handle the response
       $this->plogs(__METHOD__, $response);
@@ -229,9 +376,37 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
           return true;
       }
       // XXX add user into VOMS
-      $user_payload = $this->getUserData($user_cou_related_profile, $provisioningData);
+      $user_payload = $this->getUserData($user_cou_related_profile, $provisioningData, $idx);
       $response = $this->_voms_client->createUser($user_payload);
-      // todo: handle the response
+      // On a successful provisioning create a new entry in the database
+      if(isset($response["status_code"])
+         && $response["status_code"] === 200) {
+        // Create an entry in Provisioner Cert Records
+        $co_person_role_id = $this->getRoleIDromRequest($provisioningData);
+        $cert_records = ClassRegistry::init('ProvisionerCertRecord');
+        $cert_entry = array(
+          'ProvisionerCertRecord' => array(
+            'cert_id' => $cert_id,
+            'co_person_role_id' => $co_person_role_id,
+            'actor_identifier' => $_SESSION["Auth"]["User"]["username"]
+          ),
+        );
+
+        $save_options = array(
+          'validate' => true,
+          'atomic' => true,
+          'provisioning' => false,
+        );
+
+        if($cert_records->save($cert_entry, $save_options)) {
+          $this->log(__METHOD__ . "::Provisioner Cert Record saved successfully ", LOG_DEBUG);
+        } else {
+          $invalidFields = $cert_records->invalidFields();
+          $this->log(__METHOD__ . "::exception error => " . print_r($invalidFields, true), LOG_DEBUG);
+        }
+      }
+
+      // handle the response
       $this->plogs(__METHOD__, $response);
       $this->handleResponse($response);
     }
@@ -286,18 +461,21 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       'conditions' => ['CoGroup.id' => $co_group_id],
     );
     // todo: Check if the Cert is linked under OrgIdentity or CO Person
-    $args['contain']['CoOrgIdentityLink']['OrgIdentity'][$this->_Cert] = array(
-      'conditions' => ['Cert.issuer is not null'],
+    $args['contain']['CoOrgIdentityLink']['OrgIdentity'] = array(
+      'Assurance',                                                // Include Assurances
+      $this->_Cert => array(                                      // Include Certificates
+        'conditions' => [$this->_Cert . '.' . $this->_issuer_col . ' is not null'],
+      ),
     );
 
-    // XXX Filter with this $user_profile["CoOrgIdentityLink"][2]["OrgIdentity"]["Cert"]
+    // XXX Filter with this $user_profile["CoOrgIdentityLink"][2]["OrgIdentity"][$this->_Cert]
     // XXX We can not perform any action with VOMS without a Certificate having both a subjectDN and an Issuer
     // XXX Keep in depth level 1 only the non empty Certificates
     $user_profile = $this->CoProvisioningTarget->Co->CoPerson->find('first', $args);
 
     foreach($user_profile["CoOrgIdentityLink"] as $link) {
-      if(!empty($link["OrgIdentity"]["Cert"])) {
-        foreach ($link["OrgIdentity"]["Cert"] as $cert) {
+      if(!empty($link["OrgIdentity"][$this->_Cert])) {
+        foreach ($link["OrgIdentity"][$this->_Cert] as $cert) {
           $user_profile[$this->_Cert][] = $cert;
         }
       }
@@ -309,10 +487,12 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       // todo: Check if the Model is linked to CO Person, OrgIdentity or Both
       $cert_ids = Hash::extract($user_profile[$this->_Cert], '{n}.id');
       $args=array();
-      $args['conditions']['Cert.id'] = $cert_ids;
+      $args['conditions'][$this->_Cert . '.id'] = $cert_ids;
       $args['contain'] = array('OrgIdentity');
-      $args['contain']['OrgIdentity'][0] = 'TelephoneNumber';
-      $args['contain']['OrgIdentity'][1] = 'Address';
+      $args['contain']['OrgIdentity'][] = 'TelephoneNumber';
+      $args['contain']['OrgIdentity'][] = 'Address';
+      $args['contain']['OrgIdentity'][] = 'Assurance';
+      $args['contain']['OrgIdentity'][] = 'Identifier';
       $this->Cert = ClassRegistry::init($this->_Cert);
       $user_profile[$this->_Cert] = $this->Cert->find('all', $args);
     }
@@ -371,8 +551,8 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     // XXX Check that the Cert Model exists and has the required fields. Subject and Issuer
     if(!empty($this->data["CoVomsProvisionerTarget"]["cert_mdl"])) {
       $Cert = $this->data["CoVomsProvisionerTarget"]["cert_mdl"];
-      $this->_subject_col = $this->data["CoVomsProvisionerTarget"]["subject_clmn_name"];
-      $issuer_clmn = $this->data["CoVomsProvisionerTarget"]["issuer_clmn_name"];
+      $this->_subject_col = $this->data["CoVomsProvisionerTarget"]["subject_col_name"];
+      $issuer_clmn = $this->data["CoVomsProvisionerTarget"]["issuer_col_name"];
       $this->_Cert = ClassRegistry::init($Cert);
       // XXX Check if the Model Exists
       if(empty($this->_Cert)) {
@@ -424,29 +604,30 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
      );
    * @param array $user_profile
    * @param array $provisioningData
+   * @param integer $index
    * @return array
    * @todo constuct the correct format of user data. We need different format for Soap and Rest
    */
-  protected function getUserData($user_profile, $provisioningData) {
+  protected function getUserData($user_profile, $provisioningData, $idx = 0) {
     $user_data = array();
     $user_data['user']['emailAddress'] = !empty($provisioningData["EmailAddress"][0]["mail"])
                                          ? $provisioningData["EmailAddress"][0]["mail"]
                                          : 'unknown@mail.com';
     $user_data['user']['surname'] = $provisioningData["PrimaryName"]["family"];
     $user_data['user']['name'] = $provisioningData["PrimaryName"]["given"];
-    $user_data['user']['phoneNumber'] = !empty($user_profile["Cert"][0]["OrgIdentity"]["TelephoneNumber"])
-                                        ? $user_profile["Cert"][0]["OrgIdentity"]["TelephoneNumber"][0]['number']
+    $user_data['user']['phoneNumber'] = !empty($user_profile[$this->_Cert][$idx]["OrgIdentity"]["TelephoneNumber"])
+                                        ? $user_profile[$this->_Cert][$idx]["OrgIdentity"]["TelephoneNumber"][0]['number']
                                         : '696969699';
-    $user_data['user']['institution'] = !empty($user_profile["Cert"][0]["OrgIdentity"]["o"])
-                                        ? $user_profile["Cert"][0]["OrgIdentity"]["o"]
-                                        : $this->getOFromSbjtDN($user_profile[$this->_Cert][0][$this->_Cert][$this->_subject_col]);
-    $user_data['certificateSubject'] = $user_profile[$this->_Cert][0][$this->_Cert][$this->_subject_col];
-    $user_data['caSubject'] = $user_profile[$this->_Cert][0][$this->_Cert][$this->_issuer_col];
+    $user_data['user']['institution'] = !empty($user_profile[$this->_Cert][$idx]["OrgIdentity"]["o"])
+                                        ? $user_profile[$this->_Cert][$idx]["OrgIdentity"]["o"]
+                                        : $this->getOFromSbjtDN($user_profile[$this->_Cert][$idx][$this->_Cert][$this->_subject_col]);
+    $user_data['certificateSubject'] = $user_profile[$this->_Cert][$idx][$this->_Cert][$this->_subject_col];
+    $user_data['caSubject'] = $user_profile[$this->_Cert][$idx][$this->_Cert][$this->_issuer_col];
     $user_data['user']['address'] = 'Unknown';
 
-    if(!empty($user_profile["Cert"][0]["OrgIdentity"]["Address"])) {
-      $street = $user_profile["Cert"][0]["OrgIdentity"]["Address"][0]['street'];
-      $country = $user_profile["Cert"][0]["OrgIdentity"]["Address"][0]['country'];
+    if(!empty($user_profile[$this->_Cert][$idx]["OrgIdentity"]["Address"])) {
+      $street = $user_profile[$this->_Cert][$idx]["OrgIdentity"]["Address"][0]['street'];
+      $country = $user_profile[$this->_Cert][$idx]["OrgIdentity"]["Address"][0]['country'];
       $user_data['user']['address'] = $street . '/' . $country;
     }
 
@@ -545,7 +726,8 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
         $coProvisioningTargetData["CoVomsProvisionerTarget"]['openssl_syntax']);
       if(!is_null($voms_client)) {
         $response = $voms_client->getUserStats();
-        if($response["status_code"] === 200) {
+        if(isset($response["status_code"])
+           && $response["status_code"] === 200) {
           $this->plogs(__METHOD__, $server["protocol"] . "//:" . $server["host"] . ':' . $server["port"] . ' is alive.');
           return $voms_client;
         }
@@ -584,5 +766,39 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       return $ret["Cou"]["name"];
     }
     return '';
+  }
+
+
+  /**
+   * @param $provisioningData
+   * @return mixed|string|null
+   */
+  private function getRoleIDromRequest($provisioningData) {
+    if(!empty($_REQUEST["data"]["CoPersonRole"]["cou_id"])) { // Post Actions
+      $cou_id = $_REQUEST["data"]["CoPersonRole"]["cou_id"];
+      $flatten_prov_data = Hash::flatten($provisioningData);
+      $keys_found = array_filter(
+        $flatten_prov_data,
+        function ($value, $key) use ($cou_id) {
+          return ((int)$value === (int)$cou_id
+                  && strpos($key, 'Cou.id') !== false);
+        },
+        ARRAY_FILTER_USE_BOTH
+      );
+      $full_path = Hash::expand($keys_found);
+      $idx = key($full_path['CoPersonRole']);
+
+      return $provisioningData['CoPersonRole'][$idx]['id'];
+    } elseif(is_array($_REQUEST)) {                           // Delete Actions
+      $request = array_keys($_REQUEST);
+      $req_path = explode('/', $request[0]);
+      $req_path = array_filter($req_path); // removing blank, null, false, 0 (zero) values
+      // XXX We only want to move forward if this refers to CoPersonRole or CoPerson(?)
+      if(!in_array('co_person_roles', $req_path)) {
+        return null;
+      }
+      return end($req_path);
+    }
+    return null;
   }
 }
