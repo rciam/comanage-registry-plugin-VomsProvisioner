@@ -409,31 +409,46 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       // XXX add user into VOMS
       $user_payload = $this->getUserData($user_cou_related_profile, $provisioningData, $idx);
       $response = $this->_voms_client->createUser($user_payload);
+      $user_invo = false;
+      if(!empty($response["msg"])
+         && strpos($response["msg"], "A user holding a certificate with the following subject") !== false) {
+        $user_invo = true;
+      }
       // On a successful provisioning create a new entry in the database
-      if(!empty($response["status_code"])
-         && $response["status_code"] === 200) {
+      if((!empty($response["status_code"])
+          && $response["status_code"] === 200)
+         || $user_invo) {
         // Create an entry in Provisioner Cert Records
         $co_person_role_id = $this->getRoleIDromRequest($provisioningData, $coProvisioningTargetData);
+        // Check if we already have an entry in the database for this CO Person Role and Cert
         $cert_records = ClassRegistry::init('ProvisionerCertRecord');
-        $cert_entry = array(
-          'ProvisionerCertRecord' => array(
-            'cert_id' => $cert_id,
-            'co_person_role_id' => $co_person_role_id,
-            'actor_identifier' => $_SESSION["Auth"]["User"]["username"]
-          ),
-        );
+        $crf_args = array();
+        $crf_args['conditions']['ProvisionerCertRecord.cert_id'] = $cert_id;
+        $crf_args['conditions']['ProvisionerCertRecord.co_person_role_id'] = $co_person_role_id;
+        $crf_args['contain'] = false;
+        $prov_cert_record_count = $cert_records->find('count', $crf_args);
+        // If we have no prior record of this Certificate/Role combination, create one
+        if($prov_cert_record_count == 0) {
+          $cert_entry = array(
+            'ProvisionerCertRecord' => array(
+              'cert_id' => $cert_id,
+              'co_person_role_id' => $co_person_role_id,
+              'actor_identifier' => $_SESSION["Auth"]["User"]["username"]
+            ),
+          );
 
-        $save_options = array(
-          'validate' => true,
-          'atomic' => true,
-          'provisioning' => false,
-        );
+          $save_options = array(
+            'validate' => true,
+            'atomic' => true,
+            'provisioning' => false,
+          );
 
-        if($cert_records->save($cert_entry, $save_options)) {
-          $this->log(__METHOD__ . "::Provisioner Cert Record saved successfully ", LOG_DEBUG);
-        } else {
-          $invalidFields = $cert_records->invalidFields();
-          $this->log(__METHOD__ . "::exception error => " . print_r($invalidFields, true), LOG_DEBUG);
+          if($cert_records->save($cert_entry, $save_options)) {
+            $this->log(__METHOD__ . "::Provisioner Cert Record saved successfully ", LOG_DEBUG);
+          } else {
+            $invalidFields = $cert_records->invalidFields();
+            $this->log(__METHOD__ . "::exception error => " . print_r($invalidFields, true), LOG_DEBUG);
+          }
         }
       }
 
