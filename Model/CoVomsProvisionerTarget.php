@@ -261,8 +261,8 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
         foreach($orgid_models[$this->_Cert] as $certid => $denseval) {
           list($subjectex, $issuerex, $ordrex) = explode('@separator@', $denseval);
           $processed_list[$org_id][$this->_Cert][$certid] = array(
-            'issuer' => $issuerex,
-            'subject' => $subjectex,
+            $this->_issuer_col => $issuerex,
+            $this->_subject_col => $subjectex,
             'ordr' => (int)$ordrex,
           );
         }
@@ -308,14 +308,14 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
 
       if(!empty($processed_list[$org_id][$this->_Cert])) {
         $certificate = $processed_list[$org_id][$this->_Cert][$cert_id];
-        if(!empty($certificate['subject'])
-          && !empty($certificate['issuer'])) {
+        if(!empty($certificate[$this->_subject_col])
+          && !empty($certificate[$this->_issuer_col])) {
           $has_certificate = true;
         }
       }
       if($has_assurance && $has_certificate) {
-        $issuer = $certificate['issuer'];
-        $subject = $certificate['subject'];
+        $issuer = $certificate[$this->_issuer_col];
+        $subject = $certificate[$this->_subject_col];
         $org_id_picked = $org_id;
         $cert_id_picked = $cert_id;
         break;
@@ -346,8 +346,8 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     foreach($keys_found as $path => $value) {
       if(strpos($path, $this->_Cert . '.') !== false) {
         $re = '/Cert.(\d+).(?:.*)/m';
-        preg_match($re, $path, $match);
-        $idx = !empty($match[1]) ? (int)$match[1] : -1;
+        preg_match($re, $path, $match, PREG_UNMATCHED_AS_NULL);
+        $idx = (isset($match[1]) && !is_null($match[1])) ? (int)$match[1] : -1;
         break;
       }
     }
