@@ -339,8 +339,9 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     foreach($keys_found as $path => $value) {
       if(strpos($path, $this->_Cert . '.') !== false) {
         $re = '/Cert.(\d+).(?:.*)/m';
-        preg_match($re, $path, $match, PREG_UNMATCHED_AS_NULL);
-        $idx = (isset($match[1]) && !is_null($match[1])) ? (int)$match[1] : -1;
+//        preg_match($re, $path, $match, PREG_UNMATCHED_AS_NULL); // php 7.2+
+        preg_match($re, $path, $match);
+        $idx = ( !empty($match) && isset($match[1]) ) ? (int)$match[1] : -1;
         break;
       }
     }
