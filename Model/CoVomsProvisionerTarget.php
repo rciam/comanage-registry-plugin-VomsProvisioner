@@ -218,13 +218,6 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       // fixme: Even though i am throwing an exception this is not working
       throw new RuntimeException(_txt('op.voms_provisioner.nocert'));
     }
-    // If one the Certificate's Subject or Issuer DN is empty then return
-    if(empty($user_cou_related_profile[$this->_Cert][0][$this->_Cert][$this->_issuer_col])
-       || empty($coProvisioningTargetData["CoVomsProvisionerTarget"]["ca_dn_default"])) {
-      // XXX No default DN, break Provisioning
-      $this->log(__METHOD__ . '::Subject or Issuer DN is empty. Aborting provisioning.', LOG_DEBUG);
-      throw new RuntimeException(_txt('op.voms_provisioner.nocert'));
-    }
 
     ///// MOVE TO SEPARATE FUNCTION getCertificateByLoA($user_cou_related_profile, $assurance_prerequisite)
     // XXX Check the level of assurance
