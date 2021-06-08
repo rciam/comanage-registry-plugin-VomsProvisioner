@@ -20,6 +20,7 @@
     filter_var($server['protocol'], FILTER_SANITIZE_SPECIAL_CHARS) . '://'
     . filter_var($server['host'], FILTER_SANITIZE_SPECIAL_CHARS) . ':'
     . filter_var($server['port'], FILTER_SANITIZE_SPECIAL_CHARS) . '/'
+    . 'voms' . '/'
     . filter_var($co_voms_provisioner_targets[0]["CoVomsProvisionerTarget"]["vo"], FILTER_SANITIZE_SPECIAL_CHARS);
 
 

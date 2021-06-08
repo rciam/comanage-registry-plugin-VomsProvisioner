@@ -404,14 +404,22 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       $user_payload = $this->getUserData($user_cou_related_profile, $provisioningData, $idx);
       $response = $this->_voms_client->createUser($user_payload);
       $user_invo = false;
+      // User already registered
       if(!empty($response["msg"])
-         && strpos($response["msg"], "A user holding a certificate with the following subject") !== false) {
+         && strpos($response["msg"], "A user holding a certificate with the following subject") !== false ) {
         $user_invo = true;
       }
+      // Registration failed
+      $reg_ok = true;
+      if(!empty($response["data"])
+        && strpos($response["data"], "exception") !== false ) {
+        $reg_ok = false;
+      }
       // On a successful provisioning create a new entry in the database
-      if((!empty($response["status_code"])
-          && $response["status_code"] === 200)
-         || $user_invo) {
+      if(!empty($response["status_code"])
+         && $response["status_code"] === 200
+         && $reg_ok
+         && !$user_invo) {
         // Create an entry in Provisioner Cert Records
         $co_person_role_id = $this->getRoleIDromRequest($provisioningData, $coProvisioningTargetData);
         // Check if we already have an entry in the database for this CO Person Role and Cert
