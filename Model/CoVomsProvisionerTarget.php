@@ -364,7 +364,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
                   && ( ($user_cou_related_profile["CoPersonRole"][0]["status"] !== StatusEnum::Active                // COU/VO Active
                         && $user_cou_related_profile["CoPersonRole"][0]["status"] !== StatusEnum::GracePeriod)       // COU/VO GracePeriod
                         || ($user_cou_related_profile["CoPerson"]["status"] !== StatusEnum::Active                   // COPerson Active
-                            && $user_cou_related_profile["CoPerson"]["status"] !== StatusEnum::GracePeriod)))) {     // COPerson GracePerio
+                            && $user_cou_related_profile["CoPerson"]["status"] !== StatusEnum::GracePeriod)))) {     // COPerson GracePeriod
       // Get the Certificate from the CO Person Role
       $co_person_role_id = $this->getRoleIDromRequest($provisioningData, $coProvisioningTargetData);
       $subject_linked = null;
@@ -381,11 +381,31 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
         unset($_SESSION['ProvisionerCertRecord']);
       }
 
+      // Delete the user
+      $removed_from_vo = false;
       if (!is_null($subject_linked) && !is_null($issuer_linked)) {
         $response = $this->_voms_client->deleteUser($subject_linked,$issuer_linked);
+        $removed_from_vo = true;
       } else {
         $response = $this->_voms_client->deleteUser($user_cou_related_profile[$this->_Cert][$idx][$this->_Cert][$this->_subject_col],
                                                     $user_cou_related_profile[$this->_Cert][$idx][$this->_Cert][$this->_issuer_col]);
+        $removed_from_vo = true;
+      }
+
+      // XXX In case the CoPersonRole gets update in a status other than Active or Grace Period, we need to remove
+      // the linked Certificate manually
+      if( $removed_from_vo ) {
+        $cert_records = ClassRegistry::init('ProvisionerCertRecord');
+        $crf_args = array();
+        $crf_args['conditions']['ProvisionerCertRecord.co_person_role_id'] = $co_person_role_id;
+        $crf_args['fields'] = array('ProvisionerCertRecord.id');
+        $crf_args['contain'] = false;
+        $prov_cert_records = $cert_records->find('all', $crf_args);
+
+        // Delete the linked Certificate
+        foreach ($prov_cert_records as $clinks) {
+          $cert_records->delete($clinks['ProvisionerCertRecord']["id"]);
+        }
       }
 
       // todo: handle the response
@@ -855,7 +875,8 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       },
       ARRAY_FILTER_USE_BOTH
     );
-    if(!empty($_REQUEST["data"]["CoPersonRole"]["cou_id"])) { // Post Actions
+    if(!empty($_REQUEST["data"]["CoPersonRole"]["cou_id"])
+       && $_REQUEST["_method"] == "POST") { // Post Actions
       $cou_id = $_REQUEST["data"]["CoPersonRole"]["cou_id"];
       $flatten_prov_data = Hash::flatten($provisioningData);
       $keys_found = array_filter(
@@ -874,7 +895,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       $personrole_expand = Hash::expand($cou_paths);
       $role_idx = key($personrole_expand['CoPersonRole']);
       return $provisioningData['CoPersonRole'][$role_idx]['id'];
-    } elseif(is_array($_REQUEST)) {                           // Delete Actions
+    } elseif(is_array($_REQUEST)) {                           // Delete, Put Actions
       $request = array_keys($_REQUEST);
       $req_path = explode('/', $request[0]);
       $req_path = array_filter($req_path); // removing blank, null, false, 0 (zero) values
