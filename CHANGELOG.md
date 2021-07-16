@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.7] - 2021-07-16
+### Fixed
+- (temporary)skip if provisioner is invoked from a shell task
+
 ## [0.3.6] - 2021-07-15
 ### Fixed
 - Could not unlink Certificate from Role when changed to a non Active or Grace Period status

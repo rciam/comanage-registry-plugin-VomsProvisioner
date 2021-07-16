@@ -185,20 +185,25 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
 
     // XXX For COU Actions allow only the ones matching the COU name in the configuration of the provisioner
     // XXX For CO Person Actions skip
-    $request_keys = array_keys($_REQUEST);
-    // Is the request part of a petition
-    $is_petition = array_filter(
-      $request_keys,
-      function($val) {
-        return strpos($val, 'co_petitions') !== false;
+    if(!empty($_REQUEST)) {
+      $request_keys = array_keys($_REQUEST);
+      // Is the request part of a petition
+      $is_petition = array_filter(
+        $request_keys,
+        function ($val) {
+          return strpos($val, 'co_petitions') !== false;
+        }
+      );
+      if (empty($_REQUEST["data"]["CoPerson"])
+        && empty($is_petition)) {
+        $cou_name_frm_request = $this->getCouNameFromRequest();
+        if ($coProvisioningTargetData["CoVomsProvisionerTarget"]["vo"] !== $cou_name_frm_request) {
+          return true;
+        }
       }
-    );
-    if(empty($_REQUEST["data"]["CoPerson"])
-       && empty($is_petition)) {
-      $cou_name_frm_request = $this->getCouNameFromRequest();
-      if($coProvisioningTargetData["CoVomsProvisionerTarget"]["vo"] !== $cou_name_frm_request) {
-        return true;
-      }
+    } else {
+      // fixme: whenever a shell job runs and changes the CO Person then i do not know how to get the COU name that changed
+      return true;
     }
 
     // Get first VOMS Alive
