@@ -201,8 +201,14 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
           return true;
         }
       }
+    } elseif(!empty($provisioningData['originChange'])
+             && !empty($provisioningData['originChange']['current']['CoPersonRole.cou_id'])) {
+      $Cou = ClassRegistry::init('Cou');
+      $cou_name = $Cou->field('name', array('id' => $provisioningData['originChange']['current']['CoPersonRole.cou_id']));
+      if ($coProvisioningTargetData["CoVomsProvisionerTarget"]["vo"] !== $cou_name) {
+        return true;
+      }
     } else {
-      // fixme: whenever a shell job runs and changes the CO Person then i do not know how to get the COU name that changed
       return true;
     }
 
@@ -455,12 +461,13 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
         $crf_args['contain'] = false;
         $prov_cert_record_count = $cert_records->find('count', $crf_args);
         // If we have no prior record of this Certificate/Role combination, create one
+        $actor_identifier = !empty($_SESSION["Auth"]["User"]["username"]) ? $_SESSION["Auth"]["User"]["username"] : 'job_shell';
         if($prov_cert_record_count == 0) {
           $cert_entry = array(
             'ProvisionerCertRecord' => array(
               'cert_id' => $cert_id,
               'co_person_role_id' => $co_person_role_id,
-              'actor_identifier' => $_SESSION["Auth"]["User"]["username"]
+              'actor_identifier' => $actor_identifier,
             ),
           );
 
@@ -869,6 +876,12 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
    * @return int|null
    */
   private function getRoleIDromRequest($provisioningData, $coProvisioningTargetData) {
+    if(!empty($provisioningData['originChange']['id'])
+       && !empty($provisioningData['originChange']['model'])
+       && $provisioningData['originChange']['model'] === 'CoPersonRole') {
+      // Provisioning has not been triggered by a request. Checked my cached data
+      return $provisioningData['originChange']['id'];
+    }
     // 'CoPersonRole.{n}.Cou.name'
     $cou_name = $coProvisioningTargetData["CoVomsProvisionerTarget"]["vo"];
     $provisioningData_flatten = Hash::flatten($provisioningData);
@@ -902,6 +915,9 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       return $provisioningData['CoPersonRole'][$role_idx]['id'];
     } elseif(is_array($_REQUEST)) {                           // Delete, Put Actions
       $request = array_keys($_REQUEST);
+      if(empty($request)) {
+        return null;
+      }
       $req_path = explode('/', $request[0]);
       $req_path = array_filter($req_path); // removing blank, null, false, 0 (zero) values
       // XXX We only want to move forward if this refers to CoPersonRole or CoPerson(?)
