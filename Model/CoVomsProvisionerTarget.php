@@ -365,6 +365,14 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       return false;
     }
 
+    // Do i have more than one Roles under the same COU fetched?
+    $multiple_cou_roles = empty($user_cou_related_profile["CoPersonRole"])
+                          ? array()
+                          : Hash::combine($user_cou_related_profile, 'CoPersonRole.{n}.id', 'CoPersonRole.{n}.status');
+
+
+    // Construct the CoPersonRole ID this action will modify
+    $co_person_role_id = $this->getRoleIDromRequest($provisioningData, $coProvisioningTargetData);
 
     // XXX Now perform an action
 
@@ -372,12 +380,11 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     if((empty($user_cou_related_profile["CoPersonRole"])
         && ($modify || $voremove))                                                                             // Removed from COU/VO
             || ( !empty($user_cou_related_profile["CoPersonRole"])
-                  && ( ($user_cou_related_profile["CoPersonRole"][0]["status"] !== StatusEnum::Active                // COU/VO Active
-                        && $user_cou_related_profile["CoPersonRole"][0]["status"] !== StatusEnum::GracePeriod)       // COU/VO GracePeriod
-                        || ($user_cou_related_profile["CoPerson"]["status"] !== StatusEnum::Active                   // COPerson Active
-                            && $user_cou_related_profile["CoPerson"]["status"] !== StatusEnum::GracePeriod)))) {     // COPerson GracePeriod
+                  && ( ($multiple_cou_roles[$co_person_role_id] !== StatusEnum::Active                              // COU/VO Active
+                        && $multiple_cou_roles[$co_person_role_id] !== StatusEnum::GracePeriod)                     // COU/VO GracePeriod
+                        || ($user_cou_related_profile["CoPerson"]["status"] !== StatusEnum::Active                  // COPerson Active
+                            && $user_cou_related_profile["CoPerson"]["status"] !== StatusEnum::GracePeriod)))) {    // COPerson GracePeriod
       // Get the Certificate from the CO Person Role
-      $co_person_role_id = $this->getRoleIDromRequest($provisioningData, $coProvisioningTargetData);
       $subject_linked = null;
       $issuer_linked = null;
       if(!empty($_SESSION['ProvisionerCertRecord'])) {
@@ -394,18 +401,29 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
 
       // Delete the user
       $removed_from_vo = false;
-      if (!is_null($subject_linked) && !is_null($issuer_linked)) {
-        $response = $this->_voms_client->deleteUser($subject_linked,$issuer_linked);
-        $removed_from_vo = true;
-      } else {
-        $response = $this->_voms_client->deleteUser($user_cou_related_profile[$this->_Cert][$idx][$this->_Cert][$this->_subject_col],
-                                                    $user_cou_related_profile[$this->_Cert][$idx][$this->_Cert][$this->_issuer_col]);
-        $removed_from_vo = true;
+      $response = null;
+      $allow_voms_interaction = true;
+      // XXX If i have multiple roles. Then abort provisioning if at least one is in Grace Period or Active state
+      if (count($multiple_cou_roles) > 1
+          && ( in_array(StatusEnum::Active, $multiple_cou_roles)
+               || in_array(StatusEnum::GracePeriod, $multiple_cou_roles) )
+      ) {
+        $allow_voms_interaction = false;
+      }
+      if($allow_voms_interaction) {
+        if (!is_null($subject_linked) && !is_null($issuer_linked)) {
+          $response = $this->_voms_client->deleteUser($subject_linked,$issuer_linked);
+          $removed_from_vo = true;
+        } else {
+          $response = $this->_voms_client->deleteUser($user_cou_related_profile[$this->_Cert][$idx][$this->_Cert][$this->_subject_col],
+                                                      $user_cou_related_profile[$this->_Cert][$idx][$this->_Cert][$this->_issuer_col]);
+          $removed_from_vo = true;
+        }
       }
 
       // XXX In case the CoPersonRole gets update in a status other than Active or Grace Period, we need to remove
       // the linked Certificate manually
-      if( $removed_from_vo ) {
+      if( $removed_from_vo || !$allow_voms_interaction ) {
         $cert_records = ClassRegistry::init('ProvisionerCertRecord');
         $crf_args = array();
         $crf_args['conditions']['ProvisionerCertRecord.co_person_role_id'] = $co_person_role_id;
@@ -427,8 +445,11 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
 
     // The user is in the COU
     if(!empty($user_cou_related_profile["CoPersonRole"])) {
-      if($modify && $user_cou_related_profile["CoPersonRole"][0]["status"] === StatusEnum::Suspended) {
-          // todo: I will translate this as suspended action
+      if($modify
+         && ( !$user_cou_related_profile["CoPersonRole"][0]["status"] === StatusEnum::Active
+              && !$user_cou_related_profile["CoPersonRole"][0]["status"] === StatusEnum::GracePeriod
+            )
+      ) {
           return true;
       }
       // XXX add user into VOMS
@@ -447,12 +468,11 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
         $reg_ok = false;
       }
       // On a successful provisioning create a new entry in the database
-      if(!empty($response["status_code"])
-         && $response["status_code"] === 200
-         && $reg_ok
-         && !$user_invo) {
+      if((!empty($response["status_code"])
+          && $response["status_code"] === 200
+          && $reg_ok) || $user_invo)
+      {
         // Create an entry in Provisioner Cert Records
-        $co_person_role_id = $this->getRoleIDromRequest($provisioningData, $coProvisioningTargetData);
         // Check if we already have an entry in the database for this CO Person Role and Cert
         $cert_records = ClassRegistry::init('ProvisionerCertRecord');
         $crf_args = array();
@@ -769,7 +789,9 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
    * @param $response
    */
   protected function plogs($method, $response) {
-    if(is_array($response)) {
+    if(empty($response)) {
+      $this->log($method . "::No VOMs trasaction.", LOG_DEBUG);
+    } elseif (is_array($response)) {
       $this->log($method . "::" . print_r($response, true), LOG_DEBUG);
     } else {
       $this->log($method . "::" . $response, LOG_DEBUG);
@@ -780,7 +802,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
    * @param array $response ['status_code' => integer, 'msg' => string] Response returned by the request action
    */
   protected function handleResponse($response) {
-    if(!is_array($response)) {
+    if(empty($response) || !is_array($response)) {
       return;
     }
     if($response['status_code'] === 0) {
