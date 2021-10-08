@@ -865,9 +865,13 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
    * @return string COU name if exists, empty string otherwise
    */
   private function getCouNameFromRequest() {
-    if(!empty($_REQUEST["data"]["CoPersonRole"]["cou_id"])) { // Post Actions
-      $this->Cou = ClassRegistry::init('Cou');
-      return $this->Cou->field('name', array('id' => $_REQUEST["data"]["CoPersonRole"]["cou_id"]));
+    if(isset($_REQUEST["_method"]) && $_REQUEST["_method"] === 'POST') {
+      if(!empty($_REQUEST["data"]["CoPersonRole"]["cou_id"])) { // Post Actions
+        $this->Cou = ClassRegistry::init('Cou');
+        return $this->Cou->field('name', array('id' => $_REQUEST["data"]["CoPersonRole"]["cou_id"]));
+      } else {
+        return '';
+      }
     } elseif(is_array($_REQUEST)) {                           // Delete Actions
       $request = array_keys($_REQUEST);
       $req_path = explode('/', $request[0]);
@@ -887,7 +891,7 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       $args['fields'] = array('Cou.name');
       $this->CoPersonRole = ClassRegistry::init('CoPersonRole');
       $ret = $this->CoPersonRole->find('first',$args);
-      return $ret["Cou"]["name"];
+      return !empty($ret["Cou"]["name"]) ? $ret["Cou"]["name"] : '';
     }
     return '';
   }
