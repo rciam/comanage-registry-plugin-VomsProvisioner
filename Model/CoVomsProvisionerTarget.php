@@ -865,28 +865,28 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
    * @return string COU name if exists, empty string otherwise
    */
   private function getCouNameFromRequest() {
-    if(isset($_REQUEST["_method"]) && $_REQUEST["_method"] === 'POST') {
-      if(!empty($_REQUEST["data"]["CoPersonRole"]["cou_id"])) { // Post Actions
-        $this->Cou = ClassRegistry::init('Cou');
-        return $this->Cou->field('name', array('id' => $_REQUEST["data"]["CoPersonRole"]["cou_id"]));
-      } else {
-        return '';
-      }
-    } elseif(is_array($_REQUEST)) {                           // Delete Actions
-      $request = array_keys($_REQUEST);
-      $req_path = explode('/', $request[0]);
-      $req_path = array_filter($req_path); // removing blank, null, false, 0 (zero) values
+    $request = Router::getRequest();
+
+    if(!empty($request->data["CoPersonRoles"][0]["CouId"])) {    // REST API, POST and PUT
+      $this->Cou = ClassRegistry::init('Cou');
+      return $this->Cou->field('name', array('id' => $request->data["CoPersonRoles"][0]["CouId"]));
+    } elseif(!empty($request->data["CoPersonRole"]["cou_id"])) { // UI FORM SUBMIT, POST and PUT
+      $this->Cou = ClassRegistry::init('Cou');
+      return $this->Cou->field('name', array('id' => $request->data["CoPersonRole"]["cou_id"]));
+    } elseif(!empty($request->data["CoPersonRoles"][0]["Cou"]["Name"])) { // UI FORM SUBMIT, POST and PUT
+      return $request->data["CoPersonRoles"][0]["Cou"]["Name"];
+    } elseif($request->method() == 'DELETE'
+             || $request->method() == 'GET') {                           // Delete OR GET Actions
       // XXX We only want to move forward if this refers to CoPersonRole or CoPerson(?)
-      if(!in_array('co_person_roles', $req_path)) {
+      if($request->params["controller"] != 'co_person_roles') {
         return '';
       }
-      $co_person_role_id = end($req_path);
       $args = array();
       $args['joins'][0]['table'] = 'cous';
       $args['joins'][0]['alias'] = 'Cou';
       $args['joins'][0]['type'] = 'INNER';
       $args['joins'][0]['conditions'] = 'Cou.id=CoPersonRole.cou_id';
-      $args['conditions']['CoPersonRole.id'] = $co_person_role_id;
+      $args['conditions']['CoPersonRole.id'] = ($request->params["id"] ?? $request->params["pass"][0] ?? -1);
       $args['contain'] = false;
       $args['fields'] = array('Cou.name');
       $this->CoPersonRole = ClassRegistry::init('CoPersonRole');
