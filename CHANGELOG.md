@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.0] - 2022-02-16
 ### Fixed
 - Improve Request paramaters parsing
+- Fix conditions for VO actions
 
 ### Changed
 - Minimum PHP version 7.0

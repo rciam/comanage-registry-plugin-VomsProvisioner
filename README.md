@@ -31,12 +31,12 @@ Not yet implemented
 
 This table matches the Plugin version with the supported COmanage version.
 
-| Plugin |  COmanage |    PHP    |  VOMS  |
-|:------:|:---------:|:---------:|:------:|
-| v0.1.x | v3.1.x    | &gt;=v5.6 |  3.7.0 |
-| v0.2.x | v3.1.x    | &gt;=v5.6 |  3.7.0 |
-| v0.3.x | v3.1.x    | &gt;=v5.6 |  3.8.0 |
-
+| Plugin |    COmanage    |    PHP    |  VOMS  |
+|:------:|:--------------:|:---------:|:------:|
+| v0.1.x |     v3.1.x     | &gt;=v5.6 |  3.7.0 |
+| v0.2.x |     v3.1.x     | &gt;=v5.6 |  3.7.0 |
+| v0.3.x |     v3.1.x     | &gt;=v5.6 |  3.8.0 |
+| v0.4.x | v3.4.x (RCIAM) | &gt;=v7.0 |  3.8.0 |
 
 ## Limitations
 * Suspend User is not working through the API. As a workaround the plugin removes the user in case of a request for suspend.
