@@ -378,12 +378,13 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
 
     // The CO Person MUST BE DELETED/REMOVED from the VO
     if((empty($user_cou_related_profile["CoPersonRole"])
-        && ($modify || $voremove))                                                                             // Removed from COU/VO
+        && ($modify || $voremove))                                                                                  // Removed from COU/VO
             || ( !empty($user_cou_related_profile["CoPersonRole"])
-                  && ( ($multiple_cou_roles[$co_person_role_id] !== StatusEnum::Active                              // COU/VO Active
-                        && $multiple_cou_roles[$co_person_role_id] !== StatusEnum::GracePeriod)                     // COU/VO GracePeriod
-                        || ($user_cou_related_profile["CoPerson"]["status"] !== StatusEnum::Active                  // COPerson Active
-                            && $user_cou_related_profile["CoPerson"]["status"] !== StatusEnum::GracePeriod)))) {    // COPerson GracePeriod
+                 && ( empty($multiple_cou_roles[$co_person_role_id])                                                // Removed from the COU/VO
+                      || ($multiple_cou_roles[$co_person_role_id] !== StatusEnum::Active                            // COU/VO Active
+                          && $multiple_cou_roles[$co_person_role_id] !== StatusEnum::GracePeriod)                   // COU/VO GracePeriod
+                      || ($user_cou_related_profile["CoPerson"]["status"] !== StatusEnum::Active                    // COPerson Active
+                          && $user_cou_related_profile["CoPerson"]["status"] !== StatusEnum::GracePeriod)))) {      // COPerson GracePeriod
       // Get the Certificate from the CO Person Role
       $subject_linked = null;
       $issuer_linked = null;
@@ -446,8 +447,8 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
     // The user is in the COU
     if(!empty($user_cou_related_profile["CoPersonRole"])) {
       if($modify
-         && ( !$user_cou_related_profile["CoPersonRole"][0]["status"] === StatusEnum::Active
-              && !$user_cou_related_profile["CoPersonRole"][0]["status"] === StatusEnum::GracePeriod
+         && ( $user_cou_related_profile["CoPersonRole"][0]["status"] != StatusEnum::Active
+              && $user_cou_related_profile["CoPersonRole"][0]["status"] != StatusEnum::GracePeriod
             )
       ) {
           return true;
@@ -865,28 +866,28 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
    * @return string COU name if exists, empty string otherwise
    */
   private function getCouNameFromRequest() {
-    if(isset($_REQUEST["_method"]) && $_REQUEST["_method"] === 'POST') {
-      if(!empty($_REQUEST["data"]["CoPersonRole"]["cou_id"])) { // Post Actions
-        $this->Cou = ClassRegistry::init('Cou');
-        return $this->Cou->field('name', array('id' => $_REQUEST["data"]["CoPersonRole"]["cou_id"]));
-      } else {
-        return '';
-      }
-    } elseif(is_array($_REQUEST)) {                           // Delete Actions
-      $request = array_keys($_REQUEST);
-      $req_path = explode('/', $request[0]);
-      $req_path = array_filter($req_path); // removing blank, null, false, 0 (zero) values
+    $request = Router::getRequest();
+
+    if(!empty($request->data["CoPersonRoles"][0]["CouId"])) {    // REST API, POST and PUT
+      $this->Cou = ClassRegistry::init('Cou');
+      return $this->Cou->field('name', array('id' => $request->data["CoPersonRoles"][0]["CouId"]));
+    } elseif(!empty($request->data["CoPersonRole"]["cou_id"])) { // UI FORM SUBMIT, POST and PUT
+      $this->Cou = ClassRegistry::init('Cou');
+      return $this->Cou->field('name', array('id' => $request->data["CoPersonRole"]["cou_id"]));
+    } elseif(!empty($request->data["CoPersonRoles"][0]["Cou"]["Name"])) { // UI FORM SUBMIT, POST and PUT
+      return $request->data["CoPersonRoles"][0]["Cou"]["Name"];
+    } elseif($request->method() == 'DELETE'
+             || $request->method() == 'GET') {                           // Delete OR GET Actions
       // XXX We only want to move forward if this refers to CoPersonRole or CoPerson(?)
-      if(!in_array('co_person_roles', $req_path)) {
+      if($request->params["controller"] != 'co_person_roles') {
         return '';
       }
-      $co_person_role_id = end($req_path);
       $args = array();
       $args['joins'][0]['table'] = 'cous';
       $args['joins'][0]['alias'] = 'Cou';
       $args['joins'][0]['type'] = 'INNER';
       $args['joins'][0]['conditions'] = 'Cou.id=CoPersonRole.cou_id';
-      $args['conditions']['CoPersonRole.id'] = $co_person_role_id;
+      $args['conditions']['CoPersonRole.id'] = ($request->params["id"] ?? $request->params["pass"][0] ?? -1);
       $args['contain'] = false;
       $args['fields'] = array('Cou.name');
       $this->CoPersonRole = ClassRegistry::init('CoPersonRole');
@@ -908,9 +909,15 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       // Provisioning has not been triggered by a request. Checked my cached data
       return $provisioningData['originChange']['id'];
     }
+
+    // Get the complete request structure from CAKE
+    $request = Router::getRequest();
+
     // 'CoPersonRole.{n}.Cou.name'
     $cou_name = $coProvisioningTargetData["CoVomsProvisionerTarget"]["vo"];
     $provisioningData_flatten = Hash::flatten($provisioningData);
+    // XXX ProvisioningData will only contain Roles of certain status. For examples
+    //     Roles in suspended status will not be in Role list
     $cou_paths = array_filter(
       $provisioningData_flatten,
       function ($val, $path) use ($cou_name) {
@@ -919,9 +926,10 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
       },
       ARRAY_FILTER_USE_BOTH
     );
-    if(!empty($_REQUEST["data"]["CoPersonRole"]["cou_id"])
-       && $_REQUEST["_method"] == "POST") { // Post Actions
-      $cou_id = $_REQUEST["data"]["CoPersonRole"]["cou_id"];
+    if((!empty($request->data["CoPersonRole"]["cou_id"])
+        || !empty($request->data["CoPersonRoles"][0]["CouId"]))
+       && $request->method() == 'POST') {                     // Post Actions
+      $cou_id = $request->data["CoPersonRole"]["cou_id"] ?? $request->data["CoPersonRoles"][0]["CouId"];
       $flatten_prov_data = Hash::flatten($provisioningData);
       $keys_found = array_filter(
         $flatten_prov_data,
@@ -931,26 +939,25 @@ class CoVomsProvisionerTarget extends CoProvisionerPluginTarget
         },
         ARRAY_FILTER_USE_BOTH
       );
-      $full_path = Hash::expand($keys_found);
-      $role_idx = key($full_path['CoPersonRole']);
 
+      $full_path = Hash::expand($keys_found);
+      if(empty($full_path)) {
+        return -1;
+      }
+
+      $role_idx = key($full_path['CoPersonRole']);
       return (int)$provisioningData['CoPersonRole'][$role_idx]['id'];
     } elseif(!empty($cou_paths)) {
       $personrole_expand = Hash::expand($cou_paths);
       $role_idx = key($personrole_expand['CoPersonRole']);
       return $provisioningData['CoPersonRole'][$role_idx]['id'];
-    } elseif(is_array($_REQUEST)) {                           // Delete, Put Actions
-      $request = array_keys($_REQUEST);
-      if(empty($request)) {
+    } elseif ($request->method() == 'DELETE'
+              || $request->method() == 'GET') {                           // Delete OR GET Actions
+      if($request->params["controller"] != 'co_person_roles') {
         return null;
       }
-      $req_path = explode('/', $request[0]);
-      $req_path = array_filter($req_path); // removing blank, null, false, 0 (zero) values
-      // XXX We only want to move forward if this refers to CoPersonRole or CoPerson(?)
-      if(!in_array('co_person_roles', $req_path)) {
-        return null;
-      }
-      return (int)end($req_path);
+
+      return (int)($request->params["id"] ?? $request->params["pass"][0] ?? -1);
     }
     return null;
   }
